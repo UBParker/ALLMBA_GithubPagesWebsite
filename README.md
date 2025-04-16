@@ -52,4 +52,4 @@ This project is available for personal and commercial use.
 
 ## Contact
 
-For more information, contact info@allmba.com
+For more information, contact ashley @ NOSPAMalphabravov.com
