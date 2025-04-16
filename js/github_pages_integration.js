@@ -6,7 +6,7 @@
  */
 
 // Configuration
-const API_BASE_URL = '/api'; // Relative path to the static JSON files
+const API_BASE_URL = '/ALLMBA_GithubPagesWebsite/api'; // Relative path to the static JSON files with repo name
 
 // Elements
 let ideaContainer;
