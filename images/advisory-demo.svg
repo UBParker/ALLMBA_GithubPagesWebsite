@@ -1,0 +1,28 @@
+<svg width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f8f9fa"/>
+    <rect x="50" y="30" width="400" height="240" rx="10" fill="#ffffff" stroke="#0066cc" stroke-width="2"/>
+    
+    <!-- Chat interface -->
+    <rect x="70" y="50" width="360" height="180" rx="5" fill="#f0f7ff"/>
+    
+    <!-- AI message bubbles -->
+    <rect x="80" y="60" width="250" height="40" rx="10" fill="#e8f4ff" stroke="#0066cc" stroke-width="1"/>
+    <text x="100" y="85" font-family="Arial" font-size="12" fill="#333">How can I help with your finances today?</text>
+    
+    <!-- User message bubble -->
+    <rect x="170" y="110" width="260" height="40" rx="10" fill="#0066cc" stroke="#0066cc" stroke-width="1"/>
+    <text x="190" y="135" font-family="Arial" font-size="12" fill="#ffffff">Should I invest in stocks or bonds?</text>
+    
+    <!-- AI response bubble -->
+    <rect x="80" y="160" width="300" height="60" rx="10" fill="#e8f4ff" stroke="#0066cc" stroke-width="1"/>
+    <text x="100" y="180" font-family="Arial" font-size="12" fill="#333">Based on your profile and goals,</text>
+    <text x="100" y="195" font-family="Arial" font-size="12" fill="#333">I recommend a balanced approach with</text>
+    <text x="100" y="210" font-family="Arial" font-size="12" fill="#333">60% stocks and 40% bonds.</text>
+    
+    <!-- Chat input field -->
+    <rect x="70" y="240" width="300" height="20" rx="10" fill="#ffffff" stroke="#cccccc" stroke-width="1"/>
+    <rect x="380" y="240" width="50" height="20" rx="10" fill="#0066cc"/>
+    <text x="405" y="255" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">Send</text>
+    
+    <text x="250" y="280" font-family="Arial" font-size="14" text-anchor="middle" fill="#0066cc">AI Advisory Assistant</text>
+</svg>

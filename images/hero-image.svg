@@ -1,0 +1,11 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f0f7ff"/>
+    <rect x="100" y="50" width="400" height="300" rx="10" fill="#ffffff" stroke="#0066cc" stroke-width="2"/>
+    <circle cx="300" cy="150" r="70" fill="#e6f2ff" stroke="#0066cc" stroke-width="2"/>
+    <path d="M270,130 L280,120 L320,120 L330,130 L330,180 L270,180 Z" fill="#0066cc"/>
+    <rect x="285" y="150" width="30" height="20" fill="#ffffff"/>
+    <rect x="150" y="250" width="300" height="20" rx="5" fill="#0066cc"/>
+    <rect x="150" y="280" width="250" height="15" rx="5" fill="#4d94ff"/>
+    <rect x="150" y="305" width="200" height="15" rx="5" fill="#4d94ff"/>
+    <text x="300" y="375" font-family="Arial" font-size="16" text-anchor="middle" fill="#0066cc">ALLMBA Banking Assistant</text>
+</svg>

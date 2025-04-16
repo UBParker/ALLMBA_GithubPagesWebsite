@@ -1,0 +1,49 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f8f9fa"/>
+    
+    <!-- Main dashboard -->
+    <rect x="50" y="30" width="500" height="340" rx="10" fill="#ffffff" stroke="#0066cc" stroke-width="2"/>
+    
+    <!-- Dashboard header -->
+    <rect x="50" y="30" width="500" height="60" rx="10" fill="#0066cc"/>
+    <text x="80" y="70" font-family="Arial" font-size="20" fill="#ffffff">Daily Investment Ideas</text>
+    
+    <!-- Investment opportunity cards -->
+    <rect x="70" y="100" width="220" height="120" rx="5" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <rect x="70" y="100" width="220" height="30" rx="5" fill="#0066cc"/>
+    <text x="80" y="120" font-family="Arial" font-size="14" fill="#ffffff">Tech Sector Opportunity</text>
+    <text x="80" y="150" font-family="Arial" font-size="12" fill="#333">Growth potential: High</text>
+    <text x="80" y="170" font-family="Arial" font-size="12" fill="#333">Risk level: Medium</text>
+    <text x="80" y="190" font-family="Arial" font-size="12" fill="#333">Horizon: Long term</text>
+    <rect x="200" y="180" width="70" height="25" rx="5" fill="#00cc99"/>
+    <text x="235" y="197" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">View</text>
+    
+    <rect x="310" y="100" width="220" height="120" rx="5" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <rect x="310" y="100" width="220" height="30" rx="5" fill="#0066cc"/>
+    <text x="320" y="120" font-family="Arial" font-size="14" fill="#ffffff">Renewable Energy Focus</text>
+    <text x="320" y="150" font-family="Arial" font-size="12" fill="#333">Growth potential: Medium</text>
+    <text x="320" y="170" font-family="Arial" font-size="12" fill="#333">Risk level: Medium-Low</text>
+    <text x="320" y="190" font-family="Arial" font-size="12" fill="#333">Horizon: Medium term</text>
+    <rect x="440" y="180" width="70" height="25" rx="5" fill="#00cc99"/>
+    <text x="475" y="197" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">View</text>
+    
+    <rect x="70" y="240" width="220" height="120" rx="5" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <rect x="70" y="240" width="220" height="30" rx="5" fill="#0066cc"/>
+    <text x="80" y="260" font-family="Arial" font-size="14" fill="#ffffff">Emerging Markets Fund</text>
+    <text x="80" y="290" font-family="Arial" font-size="12" fill="#333">Growth potential: Very High</text>
+    <text x="80" y="310" font-family="Arial" font-size="12" fill="#333">Risk level: High</text>
+    <text x="80" y="330" font-family="Arial" font-size="12" fill="#333">Horizon: Long term</text>
+    <rect x="200" y="320" width="70" height="25" rx="5" fill="#00cc99"/>
+    <text x="235" y="337" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">View</text>
+    
+    <rect x="310" y="240" width="220" height="120" rx="5" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <rect x="310" y="240" width="220" height="30" rx="5" fill="#0066cc"/>
+    <text x="320" y="260" font-family="Arial" font-size="14" fill="#ffffff">Dividend Income Strategy</text>
+    <text x="320" y="290" font-family="Arial" font-size="12" fill="#333">Growth potential: Low</text>
+    <text x="320" y="310" font-family="Arial" font-size="12" fill="#333">Risk level: Low</text>
+    <text x="320" y="330" font-family="Arial" font-size="12" fill="#333">Horizon: Short term</text>
+    <rect x="440" y="320" width="70" height="25" rx="5" fill="#00cc99"/>
+    <text x="475" y="337" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">View</text>
+    
+    <text x="300" y="385" font-family="Arial" font-size="14" text-anchor="middle" fill="#0066cc">AI-Generated Investment Ideas for April 16, 2025</text>
+</svg>

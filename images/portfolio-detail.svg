@@ -1,0 +1,62 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f8f9fa"/>
+    
+    <!-- Main dashboard -->
+    <rect x="50" y="30" width="500" height="340" rx="10" fill="#ffffff" stroke="#0066cc" stroke-width="2"/>
+    
+    <!-- Dashboard header -->
+    <rect x="50" y="30" width="500" height="60" rx="10" fill="#0066cc"/>
+    <text x="80" y="70" font-family="Arial" font-size="20" fill="#ffffff">Portfolio Performance Analysis</text>
+    
+    <!-- Left column - Pie chart -->
+    <circle cx="160" cy="170" r="70" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <path d="M160,170 L160,100 A70,70 0 0,1 225,135 z" fill="#0066cc"/>
+    <path d="M160,170 L225,135 A70,70 0 0,1 220,205 z" fill="#00cc99"/>
+    <path d="M160,170 L220,205 A70,70 0 0,1 125,225 z" fill="#4d94ff"/>
+    <path d="M160,170 L125,225 A70,70 0 0,1 95,145 z" fill="#66b3ff"/>
+    <path d="M160,170 L95,145 A70,70 0 0,1 160,100 z" fill="#99ccff"/>
+    
+    <text x="160" y="260" font-family="Arial" font-size="14" text-anchor="middle" fill="#0066cc">Asset Allocation</text>
+    
+    <!-- Middle column - Line chart -->
+    <rect x="250" y="110" width="140" height="120" rx="5" fill="#f0f7ff"/>
+    
+    <!-- Line chart grid lines -->
+    <line x1="260" y1="140" x2="380" y2="140" stroke="#e0e0e0" stroke-width="1"/>
+    <line x1="260" y1="170" x2="380" y2="170" stroke="#e0e0e0" stroke-width="1"/>
+    <line x1="260" y1="200" x2="380" y2="200" stroke="#e0e0e0" stroke-width="1"/>
+    
+    <!-- Line chart axes -->
+    <line x1="260" y1="220" x2="380" y2="220" stroke="#333" stroke-width="1"/>
+    <line x1="260" y1="120" x2="260" y2="220" stroke="#333" stroke-width="1"/>
+    
+    <!-- Line chart data -->
+    <polyline points="260,180 280,175 300,165 320,155 340,140 360,130 380,125" fill="none" stroke="#0066cc" stroke-width="2"/>
+    <polyline points="260,190 280,200 300,195 320,180 340,170 360,160 380,150" fill="none" stroke="#00cc99" stroke-width="2"/>
+    
+    <text x="320" y="260" font-family="Arial" font-size="14" text-anchor="middle" fill="#0066cc">Performance</text>
+    
+    <!-- Right column - Risk assessment -->
+    <rect x="410" y="110" width="120" height="140" rx="5" fill="#f0f7ff"/>
+    
+    <!-- Risk gauge -->
+    <path d="M470,180 L470,170 A40,40 0 0,0 442,142 z" fill="#00cc99" stroke="#ffffff" stroke-width="1"/>
+    <path d="M470,180 L442,142 A40,40 0 0,0 430,170 z" fill="#99ccff" stroke="#ffffff" stroke-width="1"/>
+    <path d="M470,180 L430,170 A40,40 0 0,0 442,208 z" fill="#4d94ff" stroke="#ffffff" stroke-width="1"/>
+    <path d="M470,180 L442,208 A40,40 0 0,0 470,190 z" fill="#0066cc" stroke="#ffffff" stroke-width="1"/>
+    <path d="M470,180 L470,190 A40,40 0 0,0 498,208 z" fill="#ff9999" stroke="#ffffff" stroke-width="1"/>
+    <path d="M470,180 L498,208 A40,40 0 0,0 510,180 z" fill="#ff6666" stroke="#ffffff" stroke-width="1"/>
+    <circle cx="470" cy="180" r="5" fill="#333"/>
+    
+    <!-- Arrow -->
+    <line x1="470" y1="180" x2="442" y2="155" stroke="#333" stroke-width="2"/>
+    <polygon points="442,155 444,164 450,158" fill="#333"/>
+    
+    <text x="470" y="230" font-family="Arial" font-size="14" text-anchor="middle" fill="#0066cc">Risk Level</text>
+    
+    <!-- Bottom recommendations -->
+    <rect x="70" y="290" width="460" height="60" rx="5" fill="#f0f7ff" stroke="#cccccc" stroke-width="1"/>
+    <text x="80" y="310" font-family="Arial" font-size="14" font-weight="bold" fill="#0066cc">Optimization Recommendations:</text>
+    <text x="80" y="330" font-family="Arial" font-size="12" fill="#333">1. Increase technology sector allocation by 5% for better growth potential</text>
+    <text x="80" y="350" font-family="Arial" font-size="12" fill="#333">2. Reduce bond exposure and add alternative investments to improve diversification</text>
+</svg>
