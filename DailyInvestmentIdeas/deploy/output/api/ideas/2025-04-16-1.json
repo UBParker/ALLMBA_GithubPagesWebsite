@@ -1,0 +1,15 @@
+{
+  "title": "Regional Market Focus: US (S&P 500)",
+  "type": "Regional Market",
+  "asset": "^GSPC",
+  "market": "US (S&P 500)",
+  "rationale": "The US (S&P 500) market has shown strong performance with a 7.31% return over the past week, outperforming other major markets. Consider increasing exposure to this region.",
+  "risk_level": "Medium",
+  "time_horizon": "Medium-term",
+  "metrics": {
+    "return": 7.3066361153220765,
+    "volatility": 0.8734788340033505
+  },
+  "id": "2025-04-16-1",
+  "date": "2025-04-16"
+}

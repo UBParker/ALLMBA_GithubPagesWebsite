@@ -1,0 +1,15 @@
+{
+  "title": "Insider Activity: MSFT",
+  "type": "Stock",
+  "asset": "MSFT",
+  "rationale": "Strong insider buying detected in MSFT with 19 purchases versus 6 sales over the past 3 months. Insider buying often signals management's confidence in future prospects.",
+  "risk_level": "Medium",
+  "time_horizon": "Medium-term to Long-term",
+  "metrics": {
+    "net_buys": 13,
+    "buy_volume": 2415,
+    "sell_volume": 14880
+  },
+  "id": "2025-04-16-4",
+  "date": "2025-04-16"
+}

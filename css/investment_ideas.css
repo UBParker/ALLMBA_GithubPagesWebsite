@@ -1,12 +1,4 @@
-<!-- 
-  ALLMBA Daily Investment Ideas - Integration Template
-  
-  This template can be added to your investment.html page to display
-  the daily investment ideas from the ALLMBA API.
--->
 
-<!-- Add these styles to your CSS file or include them in your <head> -->
-<style>
   /* Investment Ideas Styles */
   .ideas-section {
     padding: 40px 0;
@@ -148,55 +140,3 @@
     margin-bottom: 20px;
     display: none;
   }
-</style>
-
-<!-- Add this section to your investment.html page -->
-<section class="ideas-section">
-  <div class="container">
-    <div class="ideas-header">
-      <div>
-        <h2>Daily Investment Ideas</h2>
-        <p>AI-generated investment opportunities for <span id="ideas-date-display">today</span></p>
-      </div>
-      <div class="ideas-filters">
-        <select id="date-selector" aria-label="Select date"></select>
-        <select id="type-selector" aria-label="Filter by type"></select>
-      </div>
-    </div>
-    
-    <div id="ideas-error"></div>
-    <div id="ideas-loading">Loading investment ideas...</div>
-    
-    <div id="investment-ideas-container" class="ideas-container"></div>
-  </div>
-</section>
-
-<!-- Template for investment idea cards -->
-<template id="idea-template">
-  <div class="idea-card">
-    <div class="idea-header">
-      <div class="idea-title"></div>
-      <div class="idea-meta">
-        <div class="idea-type"></div>
-        <div class="idea-asset"></div>
-      </div>
-    </div>
-    <div class="idea-content">
-      <p class="idea-rationale"></p>
-      <div class="idea-details">
-        <div>
-          <span>Risk:</span>
-          <span class="idea-risk"></span>
-        </div>
-        <div>
-          <span>Horizon:</span>
-          <span class="idea-horizon"></span>
-        </div>
-      </div>
-      <div class="idea-metrics"></div>
-    </div>
-  </div>
-</template>
-
-<!-- Import the integration JavaScript -->
-<script src="integration/github_pages_integration.js"></script>

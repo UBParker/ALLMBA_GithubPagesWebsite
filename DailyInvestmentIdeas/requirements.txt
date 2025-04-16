@@ -1,0 +1,32 @@
+# API Clients
+yfinance==0.2.25
+alphavantage-api==1.0.5
+newsapi-python==0.2.7
+pytrends==4.9.2
+fredapi==0.5.1
+pycoingecko==3.1.0
+finnhub-python==2.4.18
+
+# Data Processing
+pandas==2.0.3
+numpy==1.24.4
+scipy==1.11.3
+scikit-learn==1.3.0
+textblob==0.17.1
+nltk==3.8.1
+
+# API Framework
+fastapi==0.103.2
+uvicorn==0.23.2
+gunicorn==21.2.0
+pydantic==2.4.2
+
+# Cloud Integration
+google-cloud-storage==2.11.0
+google-cloud-firestore==2.12.0
+google-cloud-scheduler==2.13.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+apscheduler==3.10.4

@@ -1,0 +1,16 @@
+{
+  "title": "Strong Energy Stock: CVX",
+  "type": "Stock",
+  "asset": "CVX",
+  "sector": "Energy",
+  "rationale": "CVX has shown strong performance in the Energy sector with a 11.21% return. Technical indicators are supportive with RSI at 80.9.",
+  "risk_level": "Medium-High",
+  "time_horizon": "Medium-term",
+  "metrics": {
+    "return": 11.21153523893665,
+    "volatility": 0.8385749475344595,
+    "rsi": 80.87536699978298
+  },
+  "id": "2025-04-16-2",
+  "date": "2025-04-16"
+}

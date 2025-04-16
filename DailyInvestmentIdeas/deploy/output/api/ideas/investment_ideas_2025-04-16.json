@@ -1,0 +1,59 @@
+{
+  "date": "2025-04-16",
+  "ideas": [
+    {
+      "title": "Regional Market Focus: US (S&P 500)",
+      "type": "Regional Market",
+      "asset": "^GSPC",
+      "market": "US (S&P 500)",
+      "rationale": "The US (S&P 500) market has shown strong performance with a 7.31% return over the past week, outperforming other major markets. Consider increasing exposure to this region.",
+      "risk_level": "Medium",
+      "time_horizon": "Medium-term",
+      "metrics": {
+        "return": 7.3066361153220765,
+        "volatility": 0.8734788340033505
+      }
+    },
+    {
+      "title": "Strong Energy Stock: CVX",
+      "type": "Stock",
+      "asset": "CVX",
+      "sector": "Energy",
+      "rationale": "CVX has shown strong performance in the Energy sector with a 11.21% return. Technical indicators are supportive with RSI at 80.9.",
+      "risk_level": "Medium-High",
+      "time_horizon": "Medium-term",
+      "metrics": {
+        "return": 11.21153523893665,
+        "volatility": 0.8385749475344595,
+        "rsi": 80.87536699978298
+      }
+    },
+    {
+      "title": "Alternative Data Pick: MSFT",
+      "type": "Stock",
+      "asset": "MSFT",
+      "rationale": "MSFT shows positive signals based on alternative data analysis. Insider buying detected with 19 recent purchases. Recent earnings beat expectations by 1.79%.",
+      "risk_level": "Medium-High",
+      "time_horizon": "Medium-term",
+      "metrics": {
+        "finnhub_score": 5.8934,
+        "sentiment": null,
+        "insider_buys": 19,
+        "earnings_surprise": 1.7868
+      }
+    },
+    {
+      "title": "Insider Activity: MSFT",
+      "type": "Stock",
+      "asset": "MSFT",
+      "rationale": "Strong insider buying detected in MSFT with 19 purchases versus 6 sales over the past 3 months. Insider buying often signals management's confidence in future prospects.",
+      "risk_level": "Medium",
+      "time_horizon": "Medium-term to Long-term",
+      "metrics": {
+        "net_buys": 13,
+        "buy_volume": 2415,
+        "sell_volume": 14880
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Alternative Data Pick: MSFT",
+  "type": "Stock",
+  "asset": "MSFT",
+  "rationale": "MSFT shows positive signals based on alternative data analysis. Insider buying detected with 19 recent purchases. Recent earnings beat expectations by 1.79%.",
+  "risk_level": "Medium-High",
+  "time_horizon": "Medium-term",
+  "metrics": {
+    "finnhub_score": 5.8934,
+    "sentiment": null,
+    "insider_buys": 19,
+    "earnings_surprise": 1.7868
+  },
+  "id": "2025-04-16-3",
+  "date": "2025-04-16"
+}
