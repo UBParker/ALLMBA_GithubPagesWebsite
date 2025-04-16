@@ -2,32 +2,57 @@
   "date": "2025-04-16",
   "ideas": [
     {
-      "title": "Regional Market Focus: US (S&P 500)",
+      "title": "Regional Market Focus: Hong Kong (Hang Seng)",
       "type": "Regional Market",
-      "asset": "^GSPC",
-      "market": "US (S&P 500)",
-      "rationale": "The US (S&P 500) market has shown strong performance with a 12.73% return over the past week, outperforming other major markets. Consider increasing exposure to this region.",
+      "asset": "^HSI",
+      "market": "Hong Kong (Hang Seng)",
+      "rationale": "The Hong Kong (Hang Seng) market has shown strong performance with a 11.06% return over the past week, outperforming other major markets. Consider increasing exposure to this region.",
       "risk_level": "Medium",
       "time_horizon": "Medium-term",
       "metrics": {
-        "return": 12.72751518538014,
-        "volatility": 1.0464545208262634
+        "return": 11.056758337081805,
+        "volatility": 0.677267372773776
       }
     },
     {
-      "title": "Strong Technology Stock: AAPL",
+      "title": "Strong Financial Stock: GS",
       "type": "Stock",
-      "asset": "AAPL",
-      "sector": "Technology",
-      "rationale": "AAPL has shown strong performance in the Technology sector with a 12.67% return. Technical indicators are supportive with RSI at 37.5. Insiders have been net selling recently.",
+      "asset": "GS",
+      "sector": "Financial",
+      "rationale": "GS has shown strong performance in the Financial sector with a 7.94% return. Technical indicators are supportive with RSI at 37.8.",
       "risk_level": "Medium-High",
       "time_horizon": "Medium-term",
       "metrics": {
-        "return": 12.672543788423631,
-        "volatility": 7.212748539768707,
-        "rsi": 37.53161459635197,
-        "insider_trend": "selling",
-        "finnhub_score": -4.9249
+        "return": 7.942103327419832,
+        "volatility": 5.719899864862317,
+        "rsi": 37.778593814996896
+      }
+    },
+    {
+      "title": "Alternative Data Pick: MSFT",
+      "type": "Stock",
+      "asset": "MSFT",
+      "rationale": "MSFT shows positive signals based on alternative data analysis. Insider buying detected with 19 recent purchases. Recent earnings beat expectations by 1.79%.",
+      "risk_level": "Medium-High",
+      "time_horizon": "Medium-term",
+      "metrics": {
+        "finnhub_score": 5.8934,
+        "sentiment": null,
+        "insider_buys": 19,
+        "earnings_surprise": 1.7868
+      }
+    },
+    {
+      "title": "Insider Activity: MSFT",
+      "type": "Stock",
+      "asset": "MSFT",
+      "rationale": "Strong insider buying detected in MSFT with 19 purchases versus 6 sales over the past 3 months. Insider buying often signals management's confidence in future prospects.",
+      "risk_level": "Medium",
+      "time_horizon": "Medium-term to Long-term",
+      "metrics": {
+        "net_buys": 13,
+        "buy_volume": 2415,
+        "sell_volume": 14880
       }
     }
   ]

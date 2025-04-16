@@ -36,6 +36,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Global debug mode flag
+DEBUG_MODE = False
+
 # Set up paths
 DATA_DIR = Path(__file__).parent.parent / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
@@ -67,8 +70,32 @@ class DataAnalyzer:
                 latest_file = files[0]
                 try:
                     with open(latest_file, 'r') as f:
-                        self.data[file_type] = json.load(f)
-                    logger.debug(f"Loaded {latest_file}")
+                        data = json.load(f)
+                        self.data[file_type] = data
+                    
+                    if DEBUG_MODE:
+                        logger.debug(f"DEBUG: Loaded {latest_file}")
+                        # Check data content
+                        if isinstance(data, dict):
+                            logger.debug(f"DEBUG: {file_type} contains {len(data)} items")
+                            if len(data) == 0:
+                                logger.warning(f"DEBUG: Empty dictionary loaded from {latest_file}")
+                            else:
+                                # Show some sample data keys
+                                sample_keys = list(data.keys())[:3]
+                                logger.debug(f"DEBUG: Sample keys: {sample_keys}")
+                                # For the first item, show what it contains
+                                if sample_keys:
+                                    first_key = sample_keys[0]
+                                    first_item = data[first_key]
+                                    if isinstance(first_item, dict):
+                                        logger.debug(f"DEBUG: First item ({first_key}) contains: {list(first_item.keys())}")
+                        elif isinstance(data, list):
+                            logger.debug(f"DEBUG: {file_type} contains {len(data)} list items")
+                            if len(data) == 0:
+                                logger.warning(f"DEBUG: Empty list loaded from {latest_file}")
+                    else:
+                        logger.debug(f"Loaded {latest_file}")
                 except Exception as e:
                     logger.error(f"Error loading {latest_file}: {e}")
             else:
@@ -245,7 +272,15 @@ class DataAnalyzer:
         # Check if we have all the required Finnhub data
         required_data = ['finnhub_quotes', 'finnhub_sentiment', 'finnhub_earnings', 'finnhub_insider']
         if not all(data_type in self.data for data_type in required_data):
-            logger.warning("Missing some Finnhub data")
+            missing_data = [data_type for data_type in required_data if data_type not in self.data]
+            logger.warning(f"Missing some Finnhub data: {missing_data}")
+            
+            if DEBUG_MODE:
+                logger.debug(f"DEBUG: Available Finnhub data: {[data_type for data_type in required_data if data_type in self.data]}")
+                for data_type in self.data:
+                    if data_type.startswith('finnhub_'):
+                        logger.debug(f"DEBUG: {data_type} contains {len(self.data[data_type])} items")
+            
             return finnhub_analysis
             
         # Process each stock with Finnhub data
@@ -383,16 +418,37 @@ class DataAnalyzer:
         Generate investment ideas based on analyzed data.
         """
         logger.info("Generating investment ideas")
+        if DEBUG_MODE:
+            logger.debug("DEBUG: Starting investment idea generation")
+            logger.debug(f"DEBUG: Available data types: {list(self.data.keys())}")
         ideas = []
         
         # Process indices data
         if "indices" in self.data:
+            if DEBUG_MODE:
+                logger.debug(f"DEBUG: Processing indices data with {len(self.data['indices'])} indices")
+                # Show the indices we're working with
+                logger.debug(f"DEBUG: Available indices: {list(self.data['indices'].keys())}")
+            
             indices_perf = self.analyze_stock_performance(self.data["indices"])
+            
+            if DEBUG_MODE:
+                if indices_perf:
+                    logger.debug(f"DEBUG: Performance analysis completed for {len(indices_perf)} indices")
+                    # Show performance metrics for each index
+                    for index, perf in indices_perf.items():
+                        logger.debug(f"DEBUG: {index} performance - Return: {perf.get('return', 'N/A'):.2f}%, Volatility: {perf.get('volatility', 'N/A'):.2f}%")
+                else:
+                    logger.warning("DEBUG: No performance data generated for indices")
             
             # Identify strongest and weakest markets
             if indices_perf:
                 strongest_market = max(indices_perf.items(), key=lambda x: x[1]["return"])
                 weakest_market = min(indices_perf.items(), key=lambda x: x[1]["return"])
+                
+                if DEBUG_MODE:
+                    logger.debug(f"DEBUG: Strongest market: {strongest_market[0]} with {strongest_market[1]['return']:.2f}% return")
+                    logger.debug(f"DEBUG: Weakest market: {weakest_market[0]} with {weakest_market[1]['return']:.2f}% return")
                 
                 market_names = {
                     "^DJI": "US (Dow Jones)",
@@ -795,13 +851,33 @@ class DataAnalyzer:
         PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
         file_path = PROCESSED_DATA_DIR / f"investment_ideas_{TODAY}.json"
         
+        if DEBUG_MODE:
+            logger.debug(f"DEBUG: Saving {len(self.ideas)} investment ideas to {file_path}")
+            # Log the ideas being saved
+            for i, idea in enumerate(self.ideas):
+                logger.debug(f"DEBUG: Idea {i+1} - Title: {idea.get('title')}, Type: {idea.get('type')}, Asset: {idea.get('asset')}")
+                if 'metrics' in idea:
+                    logger.debug(f"DEBUG:   Metrics: {list(idea['metrics'].keys())}")
+        
         try:
+            output_data = {
+                "date": TODAY,
+                "ideas": self.ideas,
+            }
+            
             with open(file_path, 'w') as f:
-                json.dump({
-                    "date": TODAY,
-                    "ideas": self.ideas,
-                }, f, indent=2)
+                json.dump(output_data, f, indent=2)
+            
             logger.info(f"Saved investment ideas to {file_path}")
+            
+            if DEBUG_MODE:
+                # Verify file was written correctly by reading it back
+                try:
+                    with open(file_path, 'r') as f:
+                        verification_data = json.load(f)
+                    logger.debug(f"DEBUG: Verification - read back {len(verification_data.get('ideas', []))} ideas from saved file")
+                except Exception as verify_error:
+                    logger.error(f"DEBUG: Error verifying saved file: {verify_error}")
         except Exception as e:
             logger.error(f"Error saving investment ideas: {e}")
 
@@ -816,18 +892,32 @@ def main():
 if __name__ == "__main__":
     import sys
     
-    # Check if the verbose flag is set
-    verbose = False
-    if len(sys.argv) > 1 and sys.argv[1] == "--verbose":
-        verbose = True
-        print("Running with verbose output")
-    
-    # Set up a console handler for verbose output
-    if verbose:
+    # Check for debug mode flag
+    if len(sys.argv) > 1 and sys.argv[1] == "--debug":
+        # Enable debug mode
+        DEBUG_MODE = True
+        # Set logger level to DEBUG
+        logger.setLevel(logging.DEBUG)
+        # Add a console handler for more verbose output
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console.setFormatter(formatter)
         logger.addHandler(console)
+        # Also set root logger level
+        logging.getLogger().setLevel(logging.DEBUG)
+        
+        print("Running in DEBUG mode - analyzing data with verbose output")
+        print("Debugging info will be printed throughout execution")
+    
+    # Backward compatibility for --verbose flag
+    elif len(sys.argv) > 1 and sys.argv[1] == "--verbose":
+        DEBUG_MODE = True
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console.setFormatter(formatter)
+        logger.addHandler(console)
+        print("Running with verbose output (legacy mode, use --debug for full debug info)")
     
     main()

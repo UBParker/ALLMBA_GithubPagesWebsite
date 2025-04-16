@@ -32,6 +32,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Global debug mode flag
+DEBUG_MODE = False
+
 # API Keys
 # Alpha Vantage free tier allows 5 API calls per minute and up to 500 calls per day
 ALPHA_VANTAGE_API_KEY = "QVXM5SNGQ1K6WGPR"  # New key with higher limits
@@ -64,6 +67,8 @@ def fetch_stock_data(tickers):
         dict: Dictionary containing stock data
     """
     logger.info(f"Fetching stock data for {len(tickers)} tickers")
+    if DEBUG_MODE:
+        logger.debug(f"DEBUG: Starting stock data collection for tickers: {tickers}")
     stock_data = {}
     
     for ticker in tickers:
@@ -149,8 +154,9 @@ def fetch_stock_data(tickers):
             if response.status_code == 200:
                 data = response.json()
                 
-                # Debug: Print the response for inspection
-                print(f"Twelve Data response for {ticker}: {data}")
+                # Debug output based on debug mode
+                if DEBUG_MODE:
+                    logger.debug(f"DEBUG: Twelve Data response for {ticker}: {json.dumps(data, indent=2)}")
                 
                 # Check if we got valid data
                 if "values" in data:
@@ -188,6 +194,9 @@ def fetch_stock_data(tickers):
                     
                     if profile_response.status_code == 200:
                         profile_data = profile_response.json()
+                        
+                        if DEBUG_MODE:
+                            logger.debug(f"DEBUG: Twelve Data profile response for {ticker}: {json.dumps(profile_data, indent=2)}")
                         
                         # Create info object
                         info = {
@@ -415,7 +424,9 @@ def fetch_forex_data(pairs):
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"Twelve Data forex response for {pair}: {data}")
+                
+                if DEBUG_MODE:
+                    logger.debug(f"DEBUG: Twelve Data forex response for {pair}: {json.dumps(data, indent=2)}")
                 
                 # Check if we got valid data
                 if "values" in data:
@@ -945,6 +956,26 @@ def save_data(data, filename):
         with open(file_path, 'w') as f:
             json.dump(data, f, cls=DataEncoder)
         logger.info(f"Data saved to {file_path}")
+        
+        if DEBUG_MODE:
+            # Check if there's actual content in the data
+            if isinstance(data, dict) and len(data) == 0:
+                logger.warning(f"DEBUG: Empty dictionary saved to {file_path}")
+            elif isinstance(data, list) and len(data) == 0:
+                logger.warning(f"DEBUG: Empty list saved to {file_path}")
+            else:
+                data_size = len(json.dumps(data))
+                logger.debug(f"DEBUG: Saved {data_size} bytes to {file_path}")
+                # Print summary of what was saved
+                if isinstance(data, dict):
+                    logger.debug(f"DEBUG: Keys in saved data: {list(data.keys())}")
+                    for key, value in data.items():
+                        if isinstance(value, dict):
+                            logger.debug(f"DEBUG:   {key}: {len(value)} items")
+                        elif isinstance(value, list):
+                            logger.debug(f"DEBUG:   {key}: {len(value)} items (list)")
+                        else:
+                            logger.debug(f"DEBUG:   {key}: {type(value).__name__}")
     except Exception as e:
         logger.error(f"Error saving data to {file_path}: {e}")
 
@@ -1278,17 +1309,36 @@ def main():
 if __name__ == "__main__":
     import sys
     
-    # Set up console handler to reduce noise in test mode
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        # Set console log level to WARNING to reduce noise
+    # Check for debug mode flag
+    if len(sys.argv) > 1 and sys.argv[1] == "--debug":
+        # Enable debug mode
+        DEBUG_MODE = True
+        # Set logger level to DEBUG
+        logger.setLevel(logging.DEBUG)
+        # Add a console handler for more verbose output
         console = logging.StreamHandler()
-        console.setLevel(logging.WARNING)
+        console.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console.setFormatter(formatter)
-        logger.handlers = [console]  # Replace existing handlers
-        
+        logger.addHandler(console)
         # Also set root logger level
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger().setLevel(logging.DEBUG)
+        
+        print("Running in DEBUG mode - fetching data with verbose output")
+        print("Debugging info will be printed throughout execution")
+        
+    # Check for test mode
+    if len(sys.argv) > 1 and (sys.argv[1] == "--test" or (len(sys.argv) > 2 and sys.argv[2] == "--test")):
+        # Set console log level to WARNING to reduce noise if not in debug mode
+        if not DEBUG_MODE:
+            console = logging.StreamHandler()
+            console.setLevel(logging.WARNING)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            console.setFormatter(formatter)
+            logger.handlers = [console]  # Replace existing handlers
+            
+            # Also set root logger level
+            logging.getLogger().setLevel(logging.WARNING)
         
         print("Running in test mode - fetching limited data")
         results = test_run()
@@ -1296,5 +1346,6 @@ if __name__ == "__main__":
         for data_type, count in results.items():
             print(f"  - {data_type}: {count} items")
     else:
-        print("Running in full mode - fetching all data")
+        if not DEBUG_MODE:
+            print("Running in full mode - fetching all data")
         main()

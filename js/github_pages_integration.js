@@ -6,7 +6,10 @@
  */
 
 // Configuration
-const API_BASE_URL = '/ALLMBA_GithubPagesWebsite/api'; // Relative path to the static JSON files with repo name
+// Dynamic API URL detection (works both locally and on GitHub Pages)
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? '/api' // Local development
+  : '/ALLMBA_GithubPagesWebsite/api'; // GitHub Pages
 
 // Elements
 let ideaContainer;
