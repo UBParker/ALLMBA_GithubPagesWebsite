@@ -830,9 +830,50 @@ class DataAnalyzer:
                     logger.debug(f"DEBUG:   Metrics: {list(idea['metrics'].keys())}")
         
         try:
+            # Collect information about data sources used
+            markets_used = set()
+            sectors_used = set()
+            data_types_used = set()
+            
+            for idea in self.ideas:
+                if idea.get("market"):
+                    markets_used.add(idea["market"])
+                if idea.get("sector"):
+                    sectors_used.add(idea["sector"])
+                    
+                # Check metrics for data types
+                if "metrics" in idea:
+                    metrics = idea["metrics"]
+                    if "rsi" in metrics or "macd" in metrics:
+                        data_types_used.add("Technical Indicators")
+                    if "finnhub_score" in metrics:
+                        data_types_used.add("Alternative Data")
+                    if "net_buys" in metrics or "insider_trend" in metrics:
+                        data_types_used.add("Insider Trading Data")
+                    if "sentiment" in metrics:
+                        data_types_used.add("News Sentiment")
+            
+            # Create data sources meta information
+            data_sources = {
+                "Stock Data": "Alpha Vantage, Twelve Data, and Finnhub APIs",
+                "Market Indices": ", ".join(markets_used) if markets_used else "S&P 500, NASDAQ, FTSE 100",
+                "Sectors Analyzed": ", ".join(sectors_used) if sectors_used else "Various sectors",
+                "Economic Data": "FRED (Federal Reserve Economic Data)",
+                "Technical Analysis": "RSI, MACD, Moving Averages" if "Technical Indicators" in data_types_used else "Not used",
+                "News Sentiment": "News API" if "News Sentiment" in data_types_used else "Not used",
+                "Insider Trading": "Finnhub API" if "Insider Trading Data" in data_types_used else "Not used"
+            }
+            
+            # Markets with data
+            markets_with_data = list(self.markets.keys()) if self.markets else ["Legacy format"]
+            
             output_data = {
                 "date": TODAY,
                 "ideas": self.ideas,
+                "data_sources": data_sources,
+                "markets_analyzed": markets_with_data,
+                "data_types_used": list(data_types_used),
+                "generated_at": datetime.datetime.now().isoformat()
             }
             
             with open(file_path, 'w') as f:
@@ -846,6 +887,7 @@ class DataAnalyzer:
                     with open(file_path, 'r') as f:
                         verification_data = json.load(f)
                     logger.debug(f"DEBUG: Verification - read back {len(verification_data.get('ideas', []))} ideas from saved file")
+                    logger.debug(f"DEBUG: Data sources included: {list(verification_data.get('data_sources', {}).keys())}")
                 except Exception as verify_error:
                     logger.error(f"DEBUG: Error verifying saved file: {verify_error}")
         except Exception as e:

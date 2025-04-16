@@ -190,6 +190,9 @@ async function fetchAndDisplayIdeas() {
       return;
     }
     
+    // Update the data source disclaimer based on data sources used
+    updateDataSourceDisclaimer(data);
+    
     // Display ideas
     displayIdeas(ideas);
     
@@ -210,6 +213,70 @@ async function fetchAndDisplayIdeas() {
   } finally {
     showLoading(false);
   }
+}
+
+/**
+ * Update the data source disclaimer based on the data actually used for this report
+ */
+function updateDataSourceDisclaimer(data) {
+  const disclaimerContent = document.getElementById('disclaimer-content');
+  if (!disclaimerContent) return;
+  
+  // Extract data sources from ideas
+  const markets = new Set();
+  const sectors = new Set();
+  const assetTypes = new Set();
+  const dataTypes = new Set();
+  
+  // Extract markets, sectors, and types from ideas
+  if (data.ideas && data.ideas.length > 0) {
+    data.ideas.forEach(idea => {
+      if (idea.market) markets.add(idea.market);
+      if (idea.sector) sectors.add(idea.sector);
+      if (idea.type) assetTypes.add(idea.type);
+      
+      // Check metrics for data types
+      if (idea.metrics) {
+        if (idea.metrics.rsi !== undefined) dataTypes.add('Technical Indicators');
+        if (idea.metrics.finnhub_score !== undefined) dataTypes.add('Alternative Data');
+        if (idea.metrics.net_buys !== undefined) dataTypes.add('Insider Trading');
+        if (idea.metrics.sentiment !== undefined) dataTypes.add('News Sentiment');
+        if (idea.metrics.yield_change !== undefined) dataTypes.add('Bond Yields');
+      }
+    });
+  }
+  
+  // Extract data sources from meta information if available
+  const dataSources = data.data_sources || {
+    "Stock Data": "Alpha Vantage, Twelve Data, and Finnhub APIs",
+    "Market Indices": data.indices_used ? data.indices_used.join(", ") : "S&P 500, NASDAQ, FTSE 100",
+    "Economic Data": "FRED (Federal Reserve Economic Data)",
+    "News": "News API",
+    "Insider Trading": "Finnhub API"
+  };
+  
+  // Generate dynamic disclaimer content
+  let html = `
+    <h4>Data Source Information - ${data.date}</h4>
+    <p>These investment ideas were generated using data from the following sources:</p>
+    <ul>
+  `;
+  
+  // Add data sources
+  for (const [sourceType, sourceDesc] of Object.entries(dataSources)) {
+    html += `<li><strong>${sourceType}:</strong> ${sourceDesc}</li>`;
+  }
+  
+  html += `</ul>
+    <p><strong>Markets analyzed:</strong> ${Array.from(markets).join(', ') || "Various global markets"}</p>
+    <p><strong>Sectors covered:</strong> ${Array.from(sectors).join(', ') || "Various sectors"}</p>
+    <p><strong>Data types used:</strong> ${Array.from(dataTypes).join(', ') || "Market prices, performance metrics"}</p>
+    <p><strong>Investment idea types:</strong> ${Array.from(assetTypes).join(', ') || "Various types"}</p>
+    <p><strong>Note:</strong> Some data sources may return partial data due to API rate limits or connectivity issues. In these cases, the system may use simulated data for demonstration purposes.</p>
+    <p>The investment ideas shown are generated for educational purposes only. Always consult with a financial advisor before making investment decisions.</p>
+  `;
+  
+  disclaimerContent.innerHTML = html;
 }
 
 /**
