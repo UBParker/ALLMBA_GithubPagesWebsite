@@ -32,11 +32,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Hardcoded API keys
-ALPHA_VANTAGE_API_KEY = "ZMUZQIRZWJKML99P"
+# API Keys
+# Alpha Vantage free tier allows 5 API calls per minute and up to 500 calls per day
+ALPHA_VANTAGE_API_KEY = "QVXM5SNGQ1K6WGPR"  # New key with higher limits
 FRED_API_KEY = "fb670d7e87729f288ed7ffb40f986bb9"
 NEWS_API_KEY = "b8851f0d4dc5462bbdddebc446bbfe89"
 FINNHUB_API_KEY = "d000cm9r01qud9ql2jagd000cm9r01qud9ql2jb0"
+TWELVE_DATA_API_KEY = "d1e3b5db8bfb42668c778ed9a7cd0b7b"  # Twelve Data API key
 
 # Set up API clients
 news_api = NewsApiClient(api_key=NEWS_API_KEY)
@@ -130,16 +132,16 @@ def fetch_stock_data(tickers):
             continue
         
         try:
-            # Try to fetch data from Alpha Vantage API
-            logger.info(f"Fetching stock data for {ticker} from Alpha Vantage")
+            # Try to fetch data from Twelve Data API (much better free tier)
+            logger.info(f"Fetching stock data for {ticker} from Twelve Data API")
             
-            # Get daily price data (compact = last 100 days)
-            url = "https://www.alphavantage.co/query"
+            # Get daily price data (last 30 days)
+            url = "https://api.twelvedata.com/time_series"
             params = {
-                "function": "TIME_SERIES_DAILY",
                 "symbol": ticker,
-                "outputsize": "compact",  # compact = last 100 days
-                "apikey": ALPHA_VANTAGE_API_KEY
+                "interval": "1day",
+                "outputsize": 30,  # Last 30 days
+                "apikey": TWELVE_DATA_API_KEY  # Twelve Data API key with better limits
             }
             
             response = requests.get(url, params=params)
@@ -147,55 +149,59 @@ def fetch_stock_data(tickers):
             if response.status_code == 200:
                 data = response.json()
                 
+                # Debug: Print the response for inspection
+                print(f"Twelve Data response for {ticker}: {data}")
+                
                 # Check if we got valid data
-                if "Time Series (Daily)" in data:
+                if "values" in data:
                     # Convert to our expected format
                     history = []
-                    time_series = data["Time Series (Daily)"]
+                    values = data["values"]
                     
-                    # Sort dates in ascending order (oldest first)
-                    sorted_dates = sorted(time_series.keys())
-                    
-                    for date_str in sorted_dates:
-                        daily_data = time_series[date_str]
+                    # Twelve Data returns values in descending order (newest first)
+                    # We'll reverse to get ascending order (oldest first)
+                    for value in reversed(values):
+                        # Convert date format
+                        date_str = value["datetime"]
                         history.append({
                             "Date": datetime.datetime.strptime(date_str, "%Y-%m-%d"),
-                            "Open": float(daily_data["1. open"]),
-                            "High": float(daily_data["2. high"]),
-                            "Low": float(daily_data["3. low"]),
-                            "Close": float(daily_data["4. close"]),
-                            "Volume": float(daily_data["5. volume"]),
+                            "Open": float(value["open"]),
+                            "High": float(value["high"]),
+                            "Low": float(value["low"]),
+                            "Close": float(value["close"]),
+                            "Volume": float(value.get("volume", 0)),
                             "Dividends": 0.0,
                             "Stock Splits": 0.0
                         })
                     
-                    # Get company overview
-                    time.sleep(12)  # Respect 5 calls per minute limit
+                    # Get company profile from Twelve Data
+                    time.sleep(1)  # Brief pause
                     
-                    overview_params = {
-                        "function": "OVERVIEW",
+                    # Use Twelve Data profile endpoint
+                    profile_url = "https://api.twelvedata.com/profile"
+                    profile_params = {
                         "symbol": ticker,
-                        "apikey": ALPHA_VANTAGE_API_KEY
+                        "apikey": TWELVE_DATA_API_KEY
                     }
                     
-                    overview_response = requests.get(url, params=overview_params)
+                    profile_response = requests.get(profile_url, params=profile_params)
                     
-                    if overview_response.status_code == 200:
-                        overview_data = overview_response.json()
+                    if profile_response.status_code == 200:
+                        profile_data = profile_response.json()
                         
                         # Create info object
                         info = {
                             "symbol": ticker,
-                            "shortName": overview_data.get("Name", f"Stock {ticker}"),
-                            "longName": overview_data.get("Name", f"{ticker} Corporation"),
-                            "sector": overview_data.get("Sector", "Unknown"),
-                            "industry": overview_data.get("Industry", "Unknown"),
-                            "marketCap": float(overview_data.get("MarketCapitalization", "0")) if overview_data.get("MarketCapitalization", "0").isdigit() else 0,
+                            "shortName": profile_data.get("name", f"Stock {ticker}"),
+                            "longName": profile_data.get("name", f"{ticker} Corporation"),
+                            "sector": profile_data.get("sector", "Unknown"),
+                            "industry": profile_data.get("industry", "Unknown"),
+                            "marketCap": float(profile_data.get("market_capitalization", "0")),
                             "currentPrice": float(history[-1]["Close"]) if history else 0,
-                            "description": overview_data.get("Description", ""),
-                            "exchange": overview_data.get("Exchange", ""),
-                            "peRatio": float(overview_data.get("PERatio", "0")) if overview_data.get("PERatio", "0").replace(".", "", 1).isdigit() else 0,
-                            "dividendYield": float(overview_data.get("DividendYield", "0")) if overview_data.get("DividendYield", "0").replace(".", "", 1).isdigit() else 0,
+                            "description": profile_data.get("description", ""),
+                            "exchange": profile_data.get("exchange", ""),
+                            "peRatio": float(profile_data.get("pe_ratio", "0") or 0),
+                            "dividendYield": float(profile_data.get("dividend_yield", "0") or 0),
                         }
                         
                         stock_data[ticker] = {
@@ -205,8 +211,8 @@ def fetch_stock_data(tickers):
                         
                         logger.info(f"Successfully fetched stock data for {ticker}")
                     else:
-                        # If overview fails, still use the price data
-                        logger.warning(f"Failed to fetch company overview for {ticker}. Using basic info.")
+                        # If profile API fails, still use the price data with basic info
+                        logger.warning(f"Failed to fetch company profile for {ticker}. Using basic info.")
                         
                         # Create basic info
                         info = {
@@ -394,40 +400,40 @@ def fetch_forex_data(pairs):
                 continue
         
         try:
-            logger.info(f"Fetching forex data for {from_currency}/{to_currency} from Alpha Vantage")
+            logger.info(f"Fetching forex data for {from_currency}/{to_currency} from Twelve Data")
             
-            # Use Alpha Vantage API to get forex data
-            url = "https://www.alphavantage.co/query"
+            # Use Twelve Data API for forex
+            url = "https://api.twelvedata.com/time_series"
             params = {
-                "function": "FX_DAILY",
-                "from_symbol": from_currency,
-                "to_symbol": to_currency,
-                "outputsize": "compact",  # compact = last 100 data points
-                "apikey": ALPHA_VANTAGE_API_KEY
+                "symbol": f"{from_currency}/{to_currency}",
+                "interval": "1day",
+                "outputsize": 30,  # Last 30 days
+                "apikey": TWELVE_DATA_API_KEY
             }
             
             response = requests.get(url, params=params)
             
             if response.status_code == 200:
                 data = response.json()
+                print(f"Twelve Data forex response for {pair}: {data}")
                 
                 # Check if we got valid data
-                if "Time Series FX (Daily)" in data:
+                if "values" in data:
                     # Convert to our expected format
                     history = []
-                    time_series = data["Time Series FX (Daily)"]
+                    values = data["values"]
                     
-                    # Sort dates in ascending order (oldest first)
-                    sorted_dates = sorted(time_series.keys())
-                    
-                    for date_str in sorted_dates:
-                        daily_data = time_series[date_str]
+                    # Twelve Data returns values in descending order (newest first)
+                    # We'll reverse to get ascending order (oldest first)
+                    for value in reversed(values):
+                        # Convert date format
+                        date_str = value["datetime"]
                         history.append({
                             "Date": datetime.datetime.strptime(date_str, "%Y-%m-%d"),
-                            "Open": float(daily_data["1. open"]),
-                            "High": float(daily_data["2. high"]),
-                            "Low": float(daily_data["3. low"]),
-                            "Close": float(daily_data["4. close"]),
+                            "Open": float(value["open"]),
+                            "High": float(value["high"]),
+                            "Low": float(value["low"]),
+                            "Close": float(value["close"]),
                             # No volume data for forex, use a placeholder
                             "Volume": 0.0,
                             "Dividends": 0.0,
@@ -951,14 +957,14 @@ def test_run():
     # Ensure data directories exist
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Limited test data sets - use very few items to avoid rate limits
+    # Very limited test data sets - even more minimized to avoid rate limits
     test_indices = ["^GSPC"]  # S&P 500 only
-    test_tech_stocks = ["AAPL", "MSFT"]  # Just Apple and Microsoft
+    test_tech_stocks = ["AAPL"]  # Just Apple
     test_bonds = ["^TNX"]  # Just 10-Year Treasury
     test_forex = ["EURUSD=X"]  # Just EUR/USD pair
     test_news_queries = ["stock market"]  # Just one news query
     test_fred_series = ["UNRATE"]  # Just unemployment rate
-    test_finnhub_symbols = ["AAPL", "MSFT"]  # Just Apple and Microsoft for Finnhub
+    test_finnhub_symbols = ["AAPL"]  # Just Apple for Finnhub
     
     # Fetch data (minimal calls to avoid rate limits)
     logger.info("Starting test data collection")
@@ -1171,11 +1177,9 @@ def main():
         "FEDFUNDS",  # Federal Funds Rate
     ]
     
-    # Symbols for Finnhub detailed analysis - just 5 total
+    # Symbols for Finnhub detailed analysis - reducing to just 2 for API limits
     finnhub_symbols = [
-        "AAPL", "MSFT",  # Tech
-        "JPM",           # Finance
-        "XOM", "CVX"     # Energy
+        "AAPL", "MSFT"   # Tech only for testing
     ]
     
     # Add delays between API calls to prevent rate limiting

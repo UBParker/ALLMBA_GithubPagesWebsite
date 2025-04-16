@@ -19,14 +19,19 @@ mkdir -p deploy/output/api/types
 mkdir -p deploy/output/js
 mkdir -p deploy/output/css
 
-# Step 2: Run data collection (using test mode for speed)
-echo "Running data collection in test mode..."
+# Step 2: Run data collection (using test mode with real APIs)
+echo "Running data collection with Twelve Data API in test mode..."
 python src/collect_data.py --test
 if [ $? -ne 0 ]; then
     echo "Error: Data collection failed!"
     exit 1
 fi
-echo "Data collection completed."
+echo "Data collection completed with mock data."
+echo "Note: For live API data, register for a free API key at:"
+echo "- Twelve Data: https://twelvedata.com/pricing" 
+echo "- FRED API: https://fred.stlouisfed.org/docs/api/api_key.html"
+echo "- News API: https://newsapi.org/"
+echo "- Finnhub: https://finnhub.io/"
 
 # Step 3: Run data analysis
 echo "Running data analysis..."

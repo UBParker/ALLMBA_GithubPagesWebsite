@@ -1,6 +1,25 @@
 # Setting Up ALLMBA Daily Investment Ideas on GitHub Pages - Local Deployment
 
-Since we encountered permission issues with Google Cloud deployment, this guide shows how to use a local deployment approach to add the Daily Investment Ideas to your GitHub Pages site.
+This guide shows how to use a local deployment approach to add the Daily Investment Ideas to your GitHub Pages site. The current implementation uses mock data, but you can easily upgrade to live API data by registering for free API keys.
+
+## Using Real API Data (Optional)
+
+For a banking assistant application, real-time market data is important. You can replace the mock data with real API data by:
+
+1. Register for free API keys at:
+   - Twelve Data: https://twelvedata.com/pricing (for stocks and forex)
+   - FRED API: https://fred.stlouisfed.org/docs/api/api_key.html (for bonds and economic data)
+   - News API: https://newsapi.org/ (for news sentiment)
+   - Finnhub: https://finnhub.io/ (for company data)
+
+2. Update the API keys in `src/collect_data.py`:
+   ```python
+   # API Keys
+   TWELVE_DATA_API_KEY = "your_twelve_data_key_here"
+   FRED_API_KEY = "your_fred_api_key_here"
+   NEWS_API_KEY = "your_news_api_key_here"
+   FINNHUB_API_KEY = "your_finnhub_api_key_here"
+   ```
 
 ## Step 1: Install Required Python Packages
 

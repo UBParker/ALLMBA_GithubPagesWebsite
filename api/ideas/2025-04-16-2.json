@@ -1,15 +1,17 @@
 {
-  "title": "Strong Energy Stock: CVX",
+  "title": "Strong Technology Stock: AAPL",
   "type": "Stock",
-  "asset": "CVX",
-  "sector": "Energy",
-  "rationale": "CVX has shown strong performance in the Energy sector with a 11.21% return. Technical indicators are supportive with RSI at 80.9.",
+  "asset": "AAPL",
+  "sector": "Technology",
+  "rationale": "AAPL has shown strong performance in the Technology sector with a 12.67% return. Technical indicators are supportive with RSI at 37.5. Insiders have been net selling recently.",
   "risk_level": "Medium-High",
   "time_horizon": "Medium-term",
   "metrics": {
-    "return": 11.21153523893665,
-    "volatility": 0.8385749475344595,
-    "rsi": 80.87536699978298
+    "return": 12.672543788423631,
+    "volatility": 7.212748539768707,
+    "rsi": 37.53161459635197,
+    "insider_trend": "selling",
+    "finnhub_score": -4.9249
   },
   "id": "2025-04-16-2",
   "date": "2025-04-16"
