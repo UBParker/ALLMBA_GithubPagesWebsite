@@ -213,71 +213,123 @@ async function fetchAndDisplayIdeas() {
 }
 
 /**
- * Display investment ideas in the container
+ * Display investment ideas in the container, grouped by market
  */
 function displayIdeas(ideas) {
   if (!ideas || ideas.length === 0) return;
   
+  // Group ideas by market
+  const marketGroups = {};
+  
+  // Create an "Other" group for ideas without a market
+  marketGroups["Other"] = [];
+  
+  // Group ideas by market
   ideas.forEach(idea => {
-    const ideaElement = ideaTemplate.content.cloneNode(true);
-    
-    // Set idea content
-    ideaElement.querySelector('.idea-title').textContent = idea.title;
-    ideaElement.querySelector('.idea-type').textContent = idea.type;
-    ideaElement.querySelector('.idea-asset').textContent = idea.asset;
-    ideaElement.querySelector('.idea-rationale').textContent = idea.rationale;
-    ideaElement.querySelector('.idea-risk').textContent = idea.risk_level;
-    ideaElement.querySelector('.idea-horizon').textContent = idea.time_horizon;
-    
-    // Set risk level color
-    const riskElement = ideaElement.querySelector('.idea-risk');
-    if (riskElement) {
-      riskElement.classList.add(
-        idea.risk_level === 'Low' ? 'risk-low' :
-        idea.risk_level === 'Medium' ? 'risk-medium' :
-        idea.risk_level === 'Medium-High' ? 'risk-medium-high' :
-        idea.risk_level === 'High' ? 'risk-high' :
-        idea.risk_level === 'Very High' ? 'risk-very-high' :
-        'risk-medium'
-      );
+    const market = idea.market || 'Other';
+    if (!marketGroups[market]) {
+      marketGroups[market] = [];
     }
-    
-    // Add metrics if available
-    const metricsContainer = ideaElement.querySelector('.idea-metrics');
-    if (metricsContainer && idea.metrics) {
-      let metricsHtml = '';
-      
-      if (idea.metrics.return !== undefined) {
-        metricsHtml += `<div><span>Return:</span> ${idea.metrics.return.toFixed(2)}%</div>`;
-      }
-      
-      if (idea.metrics.volatility !== undefined) {
-        metricsHtml += `<div><span>Volatility:</span> ${idea.metrics.volatility.toFixed(2)}%</div>`;
-      }
-      
-      if (idea.metrics.rsi !== undefined) {
-        metricsHtml += `<div><span>RSI:</span> ${idea.metrics.rsi.toFixed(1)}</div>`;
-      }
-      
-      if (idea.metrics.sentiment !== undefined) {
-        const sentimentValue = (idea.metrics.sentiment * 100).toFixed(0);
-        metricsHtml += `<div><span>Sentiment:</span> ${sentimentValue}%</div>`;
-      }
-      
-      if (idea.metrics.yield_change !== undefined) {
-        metricsHtml += `<div><span>Yield Change:</span> ${idea.metrics.yield_change.toFixed(2)}%</div>`;
-      }
-      
-      if (idea.metrics.price !== undefined) {
-        metricsHtml += `<div><span>Price:</span> $${idea.metrics.price.toFixed(2)}</div>`;
-      }
-      
-      metricsContainer.innerHTML = metricsHtml;
-    }
-    
-    // Append to container
-    ideaContainer.appendChild(ideaElement);
+    marketGroups[market].push(idea);
   });
+  
+  // For each market group, create a section
+  for (const [market, marketIdeas] of Object.entries(marketGroups)) {
+    // Skip empty markets
+    if (marketIdeas.length === 0) continue;
+    
+    // Create market header
+    const marketHeader = document.createElement('div');
+    marketHeader.className = 'market-header';
+    marketHeader.innerHTML = `<h3>${market}</h3>`;
+    ideaContainer.appendChild(marketHeader);
+    
+    // Create ideas container for this market
+    const marketIdeasContainer = document.createElement('div');
+    marketIdeasContainer.className = 'market-ideas';
+    
+    // Add ideas to this market's container
+    marketIdeas.forEach(idea => {
+      const ideaElement = ideaTemplate.content.cloneNode(true);
+      
+      // Set idea content
+      ideaElement.querySelector('.idea-title').textContent = idea.title;
+      ideaElement.querySelector('.idea-type').textContent = idea.type;
+      ideaElement.querySelector('.idea-asset').textContent = idea.asset;
+      ideaElement.querySelector('.idea-rationale').textContent = idea.rationale;
+      ideaElement.querySelector('.idea-risk').textContent = idea.risk_level;
+      ideaElement.querySelector('.idea-horizon').textContent = idea.time_horizon;
+      
+      // Set risk level color
+      const riskElement = ideaElement.querySelector('.idea-risk');
+      if (riskElement) {
+        riskElement.classList.add(
+          idea.risk_level === 'Low' ? 'risk-low' :
+          idea.risk_level === 'Medium' ? 'risk-medium' :
+          idea.risk_level === 'Medium-High' ? 'risk-medium-high' :
+          idea.risk_level === 'High' ? 'risk-high' :
+          idea.risk_level === 'Very High' ? 'risk-very-high' :
+          'risk-medium'
+        );
+      }
+      
+      // Add metrics if available
+      const metricsContainer = ideaElement.querySelector('.idea-metrics');
+      if (metricsContainer && idea.metrics) {
+        let metricsHtml = '';
+        
+        if (idea.metrics.return !== undefined) {
+          metricsHtml += `<div><span>Return:</span> ${idea.metrics.return.toFixed(2)}%</div>`;
+        }
+        
+        if (idea.metrics.volatility !== undefined) {
+          metricsHtml += `<div><span>Volatility:</span> ${idea.metrics.volatility.toFixed(2)}%</div>`;
+        }
+        
+        if (idea.metrics.rsi !== undefined) {
+          metricsHtml += `<div><span>RSI:</span> ${idea.metrics.rsi.toFixed(1)}</div>`;
+        }
+        
+        if (idea.metrics.stocks_count !== undefined) {
+          metricsHtml += `<div><span>Stocks:</span> ${idea.metrics.stocks_count}</div>`;
+        }
+        
+        if (idea.metrics.avg_return !== undefined) {
+          metricsHtml += `<div><span>Avg Return:</span> ${idea.metrics.avg_return.toFixed(2)}%</div>`;
+        }
+        
+        if (idea.metrics.sentiment !== undefined) {
+          const sentimentValue = (idea.metrics.sentiment * 100).toFixed(0);
+          metricsHtml += `<div><span>Sentiment:</span> ${sentimentValue}%</div>`;
+        }
+        
+        if (idea.metrics.yield_change !== undefined) {
+          metricsHtml += `<div><span>Yield Change:</span> ${idea.metrics.yield_change.toFixed(2)}%</div>`;
+        }
+        
+        if (idea.metrics.price !== undefined) {
+          metricsHtml += `<div><span>Price:</span> $${idea.metrics.price.toFixed(2)}</div>`;
+        }
+        
+        // Additional alternative data metrics
+        if (idea.metrics.finnhub_score !== undefined) {
+          metricsHtml += `<div><span>Alt Data Score:</span> ${idea.metrics.finnhub_score.toFixed(1)}</div>`;
+        }
+        
+        if (idea.metrics.net_buys !== undefined) {
+          metricsHtml += `<div><span>Net Insider Buys:</span> ${idea.metrics.net_buys}</div>`;
+        }
+        
+        metricsContainer.innerHTML = metricsHtml;
+      }
+      
+      // Append to market container
+      marketIdeasContainer.appendChild(ideaElement);
+    });
+    
+    // Append the market ideas container to the main container
+    ideaContainer.appendChild(marketIdeasContainer);
+  }
 }
 
 /**

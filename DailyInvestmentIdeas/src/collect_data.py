@@ -53,6 +53,38 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 TODAY = datetime.datetime.now().strftime("%Y-%m-%d")
 
+# Define top stocks by market/index
+markets = {
+    "S&P500": {
+        "index": "^GSPC",
+        "stocks": [
+            # Tech
+            "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "ADBE", "CRM", "INTC",
+            # Finance
+            "JPM", "BAC", "GS", "MS", "WFC", "C", "BLK", "AXP", "V", "MA",
+            # Healthcare
+            "JNJ", "UNH", "PFE", "MRK", "ABBV", "LLY", "TMO", "ABT", "BMY", "AMGN"
+        ]
+    },
+    "NASDAQ": {
+        "index": "^IXIC",
+        "stocks": [
+            # Tech
+            "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "ADBE", "PYPL", "INTC",
+            # Biotech
+            "GILD", "REGN", "BIIB", "VRTX", "ILMN", "MRNA", "BNTX", "ISRG", "ZTS", "IDXX"
+        ]
+    },
+    "FTSE100": {
+        "index": "^FTSE",
+        "stocks": [
+            # UK Top Companies
+            "AZN.L", "SHEL.L", "HSBA.L", "GSK.L", "BP.L", "ULVR.L", "RIO.L", "LGEN.L", "BATS.L", "DGE.L",
+            "VOD.L", "LLOY.L", "REL.L", "IMB.L", "NWG.L", "AAL.L", "PRU.L", "NG.L", "STAN.L", "BARC.L"
+        ]
+    }
+}
+
 
 def fetch_stock_data(tickers):
     """
@@ -988,9 +1020,11 @@ def test_run():
     # Ensure data directories exist
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Very limited test data sets - even more minimized to avoid rate limits
-    test_indices = ["^GSPC"]  # S&P 500 only
-    test_tech_stocks = ["AAPL"]  # Just Apple
+    # Test with a single market and reduced stocks to avoid rate limits
+    test_market_name = "S&P500"
+    test_index = markets[test_market_name]["index"]
+    test_stocks = markets[test_market_name]["stocks"][:3]  # Just first 3 stocks
+    
     test_bonds = ["^TNX"]  # Just 10-Year Treasury
     test_forex = ["EURUSD=X"]  # Just EUR/USD pair
     test_news_queries = ["stock market"]  # Just one news query
@@ -1000,12 +1034,47 @@ def test_run():
     # Fetch data (minimal calls to avoid rate limits)
     logger.info("Starting test data collection")
     
-    logger.info("Fetching stock index data")
-    index_data = fetch_stock_data(test_indices)
+    # Fetch market index data
+    logger.info(f"Fetching index data for {test_market_name}")
+    index_data = fetch_stock_data([test_index])
+    market_index_name = f"index_{test_market_name.lower()}"
+    save_data(index_data, market_index_name)
     
-    logger.info("Fetching tech stock data")
-    tech_data = fetch_stock_data(test_tech_stocks)
+    # Fetch a few stocks for the market
+    logger.info(f"Fetching stock data for {test_market_name}")
+    market_stocks = fetch_stock_data(test_stocks)
+    market_stocks_name = f"stocks_{test_market_name.lower()}"
+    save_data(market_stocks, market_stocks_name)
     
+    # Create mock data for other markets to test multi-market support
+    logger.info("Creating mock data for NASDAQ market")
+    nasdaq_index = markets["NASDAQ"]["index"]
+    nasdaq_index_data = {
+        nasdaq_index: {
+            "info": {
+                "symbol": nasdaq_index,
+                "shortName": "NASDAQ Composite",
+                "longName": "NASDAQ Composite Index",
+                "sector": "Index",
+                "industry": "Market Index",
+                "marketCap": 1000000000000,
+                "currentPrice": 15756.64
+            },
+            "history": generate_mock_stock_history(nasdaq_index)
+        }
+    }
+    save_data(nasdaq_index_data, "index_nasdaq")
+    
+    # Create mock stock data for NASDAQ
+    nasdaq_stocks_data = {}
+    for ticker in markets["NASDAQ"]["stocks"][:3]:  # Just first 3 stocks
+        nasdaq_stocks_data[ticker] = {
+            "info": create_mock_stock_info(ticker),
+            "history": generate_mock_stock_history(ticker)
+        }
+    save_data(nasdaq_stocks_data, "stocks_nasdaq")
+    
+    # Other data types
     logger.info("Fetching bond data")
     bond_data = fetch_bond_data(test_bonds)
     
@@ -1038,76 +1107,12 @@ def test_run():
     logger.info("Fetching Finnhub insider data")
     finnhub_insider_data = fetch_finnhub_insider_data(test_finnhub_symbols)
     
-    # Create finance and energy stock mock data for testing analysis
-    logger.info("Creating mock finance stock data")
-    finance_data = {
-        "JPM": {
-            "info": {
-                "symbol": "JPM",
-                "shortName": "JPMorgan Chase",
-                "longName": "JPMorgan Chase & Co.",
-                "sector": "Finance",
-                "industry": "Banks",
-                "marketCap": 500000000000,
-                "currentPrice": 150.0
-            },
-            "history": generate_mock_stock_history("JPM")
-        },
-        "BAC": {
-            "info": {
-                "symbol": "BAC",
-                "shortName": "Bank of America",
-                "longName": "Bank of America Corporation",
-                "sector": "Finance",
-                "industry": "Banks",
-                "marketCap": 300000000000,
-                "currentPrice": 40.0
-            },
-            "history": generate_mock_stock_history("BAC")
-        }
-    }
-    
-    logger.info("Creating mock energy stock data")
-    energy_data = {
-        "XOM": {
-            "info": {
-                "symbol": "XOM",
-                "shortName": "Exxon Mobil",
-                "longName": "Exxon Mobil Corporation",
-                "sector": "Energy",
-                "industry": "Oil & Gas",
-                "marketCap": 400000000000,
-                "currentPrice": 110.0
-            },
-            "history": generate_mock_stock_history("XOM")
-        },
-        "CVX": {
-            "info": {
-                "symbol": "CVX",
-                "shortName": "Chevron",
-                "longName": "Chevron Corporation",
-                "sector": "Energy",
-                "industry": "Oil & Gas",
-                "marketCap": 350000000000,
-                "currentPrice": 170.0
-            },
-            "history": generate_mock_stock_history("CVX")
-        }
-    }
-    
-    # Crypto data has been removed as requested
-    
-    # Save test data
-    save_data(index_data, "indices")
-    save_data(tech_data, "tech_stocks")
-    save_data(finance_data, "finance_stocks")
-    save_data(energy_data, "energy_stocks")
+    # Save additional data
     save_data(forex_data, "forex")
     save_data(bond_data, "bonds")
     save_data(news_data, "news")
     save_data(fred_data, "fred")
     save_data(alpha_data, "alpha_vantage")
-    # Crypto data has been removed as requested
     
     # Save Finnhub data
     save_data(finnhub_quote_data, "finnhub_quotes")
@@ -1119,10 +1124,10 @@ def test_run():
     logger.info("Test data collection completed")
     
     return {
-        "indices": len(index_data),
-        "tech_stocks": len(tech_data),
-        "finance_stocks": len(finance_data),
-        "energy_stocks": len(energy_data),
+        f"index_{test_market_name.lower()}": len(index_data),
+        f"stocks_{test_market_name.lower()}": len(market_stocks),
+        "index_nasdaq": len(nasdaq_index_data),
+        "stocks_nasdaq": len(nasdaq_stocks_data),
         "forex": len(forex_data),
         "bonds": len(bond_data),
         "news": len(news_data),
@@ -1139,37 +1144,37 @@ def main():
     # Ensure data directories exist
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Define data to fetch - REDUCED to just top stocks to avoid rate limiting
-    # Regional stock indices - top 5 most important
-    indices = [
-        "^GSPC",    # S&P 500 (US)
-        "^IXIC",    # NASDAQ Composite (US)
-        "^FTSE",    # FTSE 100 (UK)
-        "^N225",    # Nikkei 225 (Japan)
-        "^HSI",     # Hang Seng Index (Hong Kong)
-    ]
-    
-    # Major tech stocks - top 5
-    tech_stocks = [
-        "AAPL",  # Apple
-        "MSFT",  # Microsoft
-        "GOOGL", # Alphabet (Google)
-        "AMZN",  # Amazon
-        "META",  # Meta (Facebook)
-    ]
-    
-    # Financial stocks - top 3
-    financial_stocks = [
-        "JPM",   # JPMorgan Chase
-        "BAC",   # Bank of America
-        "GS",    # Goldman Sachs
-    ]
-    
-    # Energy stocks - top 2
-    energy_stocks = [
-        "XOM",   # ExxonMobil
-        "CVX",   # Chevron
-    ]
+    # Process each market
+    for market_name, market_data in markets.items():
+        logger.info(f"Processing {market_name} market")
+        
+        # Fetch index data
+        index_ticker = market_data["index"]
+        logger.info(f"Fetching index data for {market_name}: {index_ticker}")
+        index_data = fetch_stock_data([index_ticker])
+        market_index_name = f"index_{market_name.lower()}"
+        save_data(index_data, market_index_name)
+        time.sleep(3)  # Pause between API calls
+        
+        # Fetch stocks data in batches to respect API limits
+        stocks = market_data["stocks"]
+        all_stocks_data = {}
+        
+        # Process in batches of 5 to respect API rate limits
+        for i in range(0, len(stocks), 5):
+            batch = stocks[i:i+5]
+            logger.info(f"Fetching batch of stocks for {market_name}: {batch}")
+            batch_data = fetch_stock_data(batch)
+            all_stocks_data.update(batch_data)
+            
+            # Don't sleep after the last batch
+            if i + 5 < len(stocks):
+                time.sleep(60)  # Respect API rate limits - longer pause between batches
+        
+        # Save market stocks data
+        market_stocks_name = f"stocks_{market_name.lower()}"
+        save_data(all_stocks_data, market_stocks_name)
+        time.sleep(5)  # Pause between markets
     
     # Forex pairs - top 3
     forex_pairs = [
@@ -1199,8 +1204,6 @@ def main():
         "bear market",
     ]
     
-    # Crypto data has been removed as requested
-    
     # FRED series - just 3
     fred_series = [
         "UNRATE",    # Unemployment Rate
@@ -1208,31 +1211,19 @@ def main():
         "FEDFUNDS",  # Federal Funds Rate
     ]
     
-    # Symbols for Finnhub detailed analysis - reducing to just 2 for API limits
-    finnhub_symbols = [
-        "AAPL", "MSFT"   # Tech only for testing
-    ]
+    # Symbols for Finnhub detailed analysis - select top stocks from each market
+    finnhub_symbols = []
+    for market_data in markets.values():
+        # Take first 2 stocks from each market for Finnhub analysis
+        finnhub_symbols.extend(market_data["stocks"][:2])
     
-    # Add delays between API calls to prevent rate limiting
-    logger.info("Starting regular data collection with reduced scope")
+    # Remove duplicates while preserving order
+    finnhub_symbols = list(dict.fromkeys(finnhub_symbols))
     
-    # Fetch data with pauses between different data sources
-    logger.info("Fetching market indices data")
-    index_data = fetch_stock_data(indices)
-    time.sleep(3)
+    if DEBUG_MODE:
+        logger.debug(f"DEBUG: Selected {len(finnhub_symbols)} stocks for Finnhub analysis: {finnhub_symbols}")
     
-    logger.info("Fetching tech stocks data")
-    tech_data = fetch_stock_data(tech_stocks)
-    time.sleep(3)
-    
-    logger.info("Fetching finance stocks data")
-    finance_data = fetch_stock_data(financial_stocks)
-    time.sleep(3)
-    
-    logger.info("Fetching energy stocks data")
-    energy_data = fetch_stock_data(energy_stocks)
-    time.sleep(3)
-    
+    # Fetch remaining data types
     logger.info("Fetching forex data")
     forex_data = fetch_forex_data(forex_pairs)
     time.sleep(3)
@@ -1249,50 +1240,56 @@ def main():
     trend_data = fetch_trend_data(trend_keywords)
     time.sleep(3)
     
-    # Crypto data has been removed as requested
-    
     logger.info("Fetching FRED data")
     fred_data = fetch_fred_data(fred_series)
     time.sleep(3)
     
-    # Alpha Vantage data (limited to 2 symbols due to API limits)
+    # Alpha Vantage data (limited due to API limits)
     logger.info("Fetching Alpha Vantage data")
-    alpha_symbols = ["AAPL", "MSFT"]
+    alpha_symbols = finnhub_symbols[:2]  # Just use first two symbols for Alpha Vantage
     alpha_data = fetch_alpha_vantage_data(alpha_symbols)
     time.sleep(3)
     
-    # Finnhub data
-    logger.info("Fetching Finnhub quote data")
-    finnhub_quote_data = fetch_finnhub_quote_data(finnhub_symbols)
-    time.sleep(1)
+    # Process Finnhub data in smaller batches
+    finnhub_quote_data = {}
+    finnhub_company_data = {}
+    finnhub_earnings_data = {}
+    finnhub_insider_data = {}
     
-    logger.info("Fetching Finnhub company data")
-    finnhub_company_data = fetch_finnhub_company_data(finnhub_symbols)
-    time.sleep(1)
+    # Process in batches of 3 to respect Finnhub rate limits
+    for i in range(0, len(finnhub_symbols), 3):
+        batch = finnhub_symbols[i:i+3]
+        
+        logger.info(f"Fetching Finnhub quote data for batch: {batch}")
+        batch_quotes = fetch_finnhub_quote_data(batch)
+        finnhub_quote_data.update(batch_quotes)
+        time.sleep(1)
+        
+        logger.info(f"Fetching Finnhub company data for batch: {batch}")
+        batch_company = fetch_finnhub_company_data(batch)
+        finnhub_company_data.update(batch_company)
+        time.sleep(1)
+        
+        logger.info(f"Fetching Finnhub earnings data for batch: {batch}")
+        batch_earnings = fetch_finnhub_earnings_data(batch)
+        finnhub_earnings_data.update(batch_earnings)
+        time.sleep(1)
+        
+        logger.info(f"Fetching Finnhub insider data for batch: {batch}")
+        batch_insider = fetch_finnhub_insider_data(batch)
+        finnhub_insider_data.update(batch_insider)
+        time.sleep(2)  # Slightly longer pause between batches
     
-    # We don't use Finnhub sentiment data anymore as it requires premium API access
+    # We don't use Finnhub sentiment data as it requires premium API access
     logger.info("Skipping Finnhub sentiment data (premium API required)")
     finnhub_sentiment_data = {}  # Empty dictionary as placeholder
-    time.sleep(1)
     
-    logger.info("Fetching Finnhub earnings data")
-    finnhub_earnings_data = fetch_finnhub_earnings_data(finnhub_symbols)
-    time.sleep(1)
-    
-    logger.info("Fetching Finnhub insider data")
-    finnhub_insider_data = fetch_finnhub_insider_data(finnhub_symbols)
-    
-    # Save data
-    logger.info("Saving collected data")
-    save_data(index_data, "indices")
-    save_data(tech_data, "tech_stocks")
-    save_data(finance_data, "finance_stocks")
-    save_data(energy_data, "energy_stocks")
+    # Save additional data
+    logger.info("Saving additional collected data")
     save_data(forex_data, "forex")
     save_data(bond_data, "bonds")
     save_data(news_data, "news")
     save_data(trend_data, "trends")
-    # Crypto data has been removed as requested
     save_data(fred_data, "fred")
     save_data(alpha_data, "alpha_vantage")
     
@@ -1303,7 +1300,7 @@ def main():
     save_data(finnhub_earnings_data, "finnhub_earnings")
     save_data(finnhub_insider_data, "finnhub_insider")
     
-    logger.info("Regular data collection completed")
+    logger.info("Market data collection completed")
 
 
 if __name__ == "__main__":

@@ -48,21 +48,99 @@ TODAY = datetime.datetime.now().strftime("%Y-%m-%d")
 class DataAnalyzer:
     def __init__(self):
         self.data = {}
+        self.markets = {}  # Store market data organized by market name
         self.ideas = []
         self.trends = {}
         self.sentiment = {}
     
     def load_data(self):
         """
-        Load collected data from raw data directory.
+        Load collected data from raw data directory, organizing by market.
         """
         logger.info("Loading raw data")
         
-        # Find the most recent data files
-        for file_type in ["indices", "tech_stocks", "finance_stocks", "energy_stocks", 
-                         "forex", "bonds", "news", "trends", "crypto", "fred", "alpha_vantage",
-                         "finnhub_quotes", "finnhub_company", "finnhub_sentiment", 
-                         "finnhub_earnings", "finnhub_insider"]:
+        # Load market data
+        self.markets = {}
+        
+        # Get market names from the configured markets
+        market_names = ["S&P500", "NASDAQ", "FTSE100"]
+        
+        # Load data for each market
+        for market_name in market_names:
+            market_name_lower = market_name.lower()
+            
+            # Find and load index data
+            index_pattern = f"index_{market_name_lower}_*.json"
+            index_files = sorted(RAW_DATA_DIR.glob(index_pattern), reverse=True)
+            
+            # Find and load stocks data
+            stocks_pattern = f"stocks_{market_name_lower}_*.json"
+            stocks_files = sorted(RAW_DATA_DIR.glob(stocks_pattern), reverse=True)
+            
+            if index_files and stocks_files:
+                try:
+                    # Load index data
+                    with open(index_files[0], 'r') as f:
+                        index_data = json.load(f)
+                    
+                    # Load stocks data
+                    with open(stocks_files[0], 'r') as f:
+                        stocks_data = json.load(f)
+                    
+                    # Store in markets dictionary
+                    self.markets[market_name] = {
+                        "index": index_data,
+                        "stocks": stocks_data,
+                        "index_file": index_files[0].name,
+                        "stocks_file": stocks_files[0].name
+                    }
+                    
+                    if DEBUG_MODE:
+                        logger.debug(f"DEBUG: Loaded market data for {market_name}")
+                        logger.debug(f"DEBUG:   Index: {list(index_data.keys())}")
+                        logger.debug(f"DEBUG:   Stocks: {len(stocks_data)} stocks loaded")
+                        
+                        # Show top 5 stocks to verify data
+                        stock_names = list(stocks_data.keys())[:5]
+                        logger.debug(f"DEBUG:   Sample stocks: {stock_names}")
+                except Exception as e:
+                    logger.error(f"Error loading market data for {market_name}: {e}")
+            else:
+                if DEBUG_MODE:
+                    if not index_files:
+                        logger.warning(f"DEBUG: No index data files found for {market_name}")
+                    if not stocks_files:
+                        logger.warning(f"DEBUG: No stocks data files found for {market_name}")
+        
+        if not self.markets:
+            logger.warning("No market data found. Falling back to legacy data format.")
+            
+            # Fall back to legacy format for backward compatibility
+            legacy_data_types = ["indices", "tech_stocks", "finance_stocks", "energy_stocks"]
+            
+            for file_type in legacy_data_types:
+                pattern = f"{file_type}_*.json"
+                files = sorted(RAW_DATA_DIR.glob(pattern), reverse=True)
+                
+                if files:
+                    latest_file = files[0]
+                    try:
+                        with open(latest_file, 'r') as f:
+                            data = json.load(f)
+                            self.data[file_type] = data
+                        
+                        logger.debug(f"Loaded legacy data type: {file_type}")
+                    except Exception as e:
+                        logger.error(f"Error loading {latest_file}: {e}")
+        
+        # Load other data types (unchanged)
+        other_data_types = [
+            "forex", "bonds", "news", "trends", "crypto", "fred", "alpha_vantage",
+            "finnhub_quotes", "finnhub_company", "finnhub_sentiment", 
+            "finnhub_earnings", "finnhub_insider"
+        ]
+        
+        for file_type in other_data_types:
             pattern = f"{file_type}_*.json"
             files = sorted(RAW_DATA_DIR.glob(pattern), reverse=True)
             
@@ -84,12 +162,6 @@ class DataAnalyzer:
                                 # Show some sample data keys
                                 sample_keys = list(data.keys())[:3]
                                 logger.debug(f"DEBUG: Sample keys: {sample_keys}")
-                                # For the first item, show what it contains
-                                if sample_keys:
-                                    first_key = sample_keys[0]
-                                    first_item = data[first_key]
-                                    if isinstance(first_item, dict):
-                                        logger.debug(f"DEBUG: First item ({first_key}) contains: {list(first_item.keys())}")
                         elif isinstance(data, list):
                             logger.debug(f"DEBUG: {file_type} contains {len(data)} list items")
                             if len(data) == 0:
@@ -413,6 +485,84 @@ class DataAnalyzer:
         
         return finnhub_analysis
     
+    def analyze_market(self, market_name):
+        """
+        Analyze a specific market (index + constituent stocks).
+        
+        Args:
+            market_name (str): The name of the market to analyze
+            
+        Returns:
+            dict: Market analysis results
+        """
+        if market_name not in self.markets:
+            if DEBUG_MODE:
+                logger.warning(f"DEBUG: Market {market_name} not found in available markets")
+            return None
+        
+        market_data = self.markets[market_name]
+        index_data = market_data["index"]  # Get the index data
+        stocks_data = market_data["stocks"]
+        
+        if DEBUG_MODE:
+            logger.debug(f"DEBUG: Analyzing market: {market_name}")
+            logger.debug(f"DEBUG: Index ticker: {list(index_data.keys())[0]}")
+            logger.debug(f"DEBUG: Number of stocks: {len(stocks_data)}")
+        
+        # Analyze index performance
+        index_perf = self.analyze_stock_performance(index_data)
+        if not index_perf:
+            logger.warning(f"Failed to analyze index performance for {market_name}")
+            return None
+        
+        # Analyze stocks performance
+        stocks_perf = self.analyze_stock_performance(stocks_data)
+        
+        # Calculate technical indicators
+        stocks_tech = self.analyze_technical_indicators(stocks_data)
+        
+        # Identify top performers in the market
+        if stocks_perf:
+            # Sort stocks by return
+            sorted_stocks = sorted(
+                [(ticker, data) for ticker, data in stocks_perf.items()],
+                key=lambda x: x[1].get("return", 0),
+                reverse=True
+            )
+            
+            # Get top 5 performers
+            top_performers = sorted_stocks[:5]
+            
+            # Get bottom 5 performers
+            bottom_performers = sorted_stocks[-5:] if len(sorted_stocks) >= 5 else []
+            
+            # Calculate sector distribution of top performers
+            sectors = {}
+            for ticker, _ in top_performers:
+                if ticker in stocks_data:
+                    sector = stocks_data[ticker].get("info", {}).get("sector", "Unknown")
+                    sectors[sector] = sectors.get(sector, 0) + 1
+            
+            # Find dominant sector
+            dominant_sector = max(sectors.items(), key=lambda x: x[1])[0] if sectors else "Unknown"
+            
+            if DEBUG_MODE:
+                logger.debug(f"DEBUG: Market {market_name} analysis complete")
+                logger.debug(f"DEBUG: Top performers: {[t[0] for t in top_performers]}")
+                logger.debug(f"DEBUG: Dominant sector: {dominant_sector}")
+            
+            return {
+                "name": market_name,
+                "index_performance": index_perf,
+                "top_performers": top_performers,
+                "bottom_performers": bottom_performers,
+                "dominant_sector": dominant_sector,
+                "stocks_performance": stocks_perf,
+                "technical_indicators": stocks_tech
+            }
+        
+        return None
+
     def generate_investment_ideas(self):
         """
         Generate investment ideas based on analyzed data.
@@ -420,157 +570,120 @@ class DataAnalyzer:
         logger.info("Generating investment ideas")
         if DEBUG_MODE:
             logger.debug("DEBUG: Starting investment idea generation")
-            logger.debug(f"DEBUG: Available data types: {list(self.data.keys())}")
+            logger.debug(f"DEBUG: Available markets: {list(self.markets.keys())}")
+            logger.debug(f"DEBUG: Available other data types: {list(self.data.keys())}")
         ideas = []
         
-        # Process indices data
-        if "indices" in self.data:
-            if DEBUG_MODE:
-                logger.debug(f"DEBUG: Processing indices data with {len(self.data['indices'])} indices")
-                # Show the indices we're working with
-                logger.debug(f"DEBUG: Available indices: {list(self.data['indices'].keys())}")
+        # Analyze each market
+        market_analyses = {}
+        for market_name in self.markets.keys():
+            analysis = self.analyze_market(market_name)
+            if analysis:
+                market_analyses[market_name] = analysis
+        
+        if DEBUG_MODE:
+            logger.debug(f"DEBUG: Completed analysis for {len(market_analyses)} markets")
+        
+        # Generate market-specific ideas
+        for market_name, analysis in market_analyses.items():
+            # Market overview idea
+            index_ticker = list(self.markets[market_name]["index"].keys())[0]
+            index_perf = analysis["index_performance"].get(index_ticker, {})
             
-            indices_perf = self.analyze_stock_performance(self.data["indices"])
-            
-            if DEBUG_MODE:
-                if indices_perf:
-                    logger.debug(f"DEBUG: Performance analysis completed for {len(indices_perf)} indices")
-                    # Show performance metrics for each index
-                    for index, perf in indices_perf.items():
-                        logger.debug(f"DEBUG: {index} performance - Return: {perf.get('return', 'N/A'):.2f}%, Volatility: {perf.get('volatility', 'N/A'):.2f}%")
-                else:
-                    logger.warning("DEBUG: No performance data generated for indices")
-            
-            # Identify strongest and weakest markets
-            if indices_perf:
-                strongest_market = max(indices_perf.items(), key=lambda x: x[1]["return"])
-                weakest_market = min(indices_perf.items(), key=lambda x: x[1]["return"])
-                
-                if DEBUG_MODE:
-                    logger.debug(f"DEBUG: Strongest market: {strongest_market[0]} with {strongest_market[1]['return']:.2f}% return")
-                    logger.debug(f"DEBUG: Weakest market: {weakest_market[0]} with {weakest_market[1]['return']:.2f}% return")
-                
-                market_names = {
-                    "^DJI": "US (Dow Jones)",
-                    "^GSPC": "US (S&P 500)",
-                    "^IXIC": "US (NASDAQ)",
-                    "^FTSE": "UK (FTSE 100)",
-                    "^GDAXI": "Germany (DAX)",
-                    "^FCHI": "France (CAC 40)",
-                    "^N225": "Japan (Nikkei 225)",
-                    "^HSI": "Hong Kong (Hang Seng)",
-                    "000001.SS": "China (Shanghai Composite)",
-                    "^GSPTSE": "Canada (S&P/TSX Composite)",
-                }
-                
-                # Add regional market idea
-                strongest_name = market_names.get(strongest_market[0], strongest_market[0])
+            # Only add if we have valid performance data
+            if "return" in index_perf:
                 ideas.append({
-                    "title": f"Regional Market Focus: {strongest_name}",
-                    "type": "Regional Market",
-                    "asset": strongest_market[0],
-                    "market": strongest_name,
-                    "rationale": f"The {strongest_name} market has shown strong performance with a {strongest_market[1]['return']:.2f}% return over the past week, outperforming other major markets. Consider increasing exposure to this region.",
+                    "title": f"{market_name} Market Overview",
+                    "type": "Market Analysis",
+                    "asset": index_ticker,
+                    "market": market_name,
+                    "rationale": f"The {market_name} index has shown a {index_perf.get('return', 0):.2f}% return over the past week. The dominant sector among top performers is {analysis['dominant_sector']}.",
                     "risk_level": "Medium",
                     "time_horizon": "Medium-term",
                     "metrics": {
-                        "return": strongest_market[1]['return'],
-                        "volatility": strongest_market[1]['volatility'],
+                        "return": index_perf.get("return", 0),
+                        "volatility": index_perf.get("volatility", 0),
+                    }
+                })
+            
+            # Top performer idea
+            if analysis["top_performers"]:
+                top_ticker, top_data = analysis["top_performers"][0]
+                ticker_data = self.markets[market_name]["stocks"].get(top_ticker, {})
+                sector = ticker_data.get("info", {}).get("sector", "Unknown")
+                
+                # Add technical indicator data
+                tech_indicators = analysis["technical_indicators"].get(top_ticker, {})
+                rsi_value = tech_indicators.get("rsi", "N/A")
+                rsi_str = f"{rsi_value:.1f}" if isinstance(rsi_value, (int, float)) else "N/A"
+                macd = tech_indicators.get("macd", "N/A")
+                
+                tech_description = f" Technical indicators are supportive"
+                if isinstance(rsi_value, (int, float)):
+                    tech_description += f" with RSI at {rsi_str}"
+                    if rsi_value < 30:
+                        tech_description += " (oversold)"
+                    elif rsi_value > 70:
+                        tech_description += " (overbought)"
+                tech_description += "."
+                
+                # Add the idea
+                ideas.append({
+                    "title": f"Top {market_name} Performer: {top_ticker}",
+                    "type": "Stock",
+                    "asset": top_ticker,
+                    "sector": sector,
+                    "market": market_name,
+                    "rationale": f"{top_ticker} is the top performer in the {market_name} market with a {top_data.get('return', 0):.2f}% return over the past week.{tech_description}",
+                    "risk_level": "Medium-High",
+                    "time_horizon": "Short-term to Medium-term",
+                    "metrics": {
+                        "return": top_data.get("return", 0),
+                        "volatility": top_data.get("volatility", 0),
+                        "rsi": rsi_value if isinstance(rsi_value, (int, float)) else None,
+                    }
+                })
+            
+            # Sector rotation idea if we have dominant sectors
+            if analysis["dominant_sector"] != "Unknown":
+                # Get all stocks in the dominant sector
+                sector_stocks = []
+                for ticker, stock_data in self.markets[market_name]["stocks"].items():
+                    sector = stock_data.get("info", {}).get("sector", "Unknown")
+                    if sector == analysis["dominant_sector"]:
+                        # Get performance data if available
+                        if ticker in analysis["stocks_performance"]:
+                            perf = analysis["stocks_performance"][ticker]
+                            sector_stocks.append((ticker, perf))
+                
+                # Sort sector stocks by performance
+                sector_stocks.sort(key=lambda x: x[1].get("return", 0), reverse=True)
+                
+                # List top 3 stocks in the sector
+                top_sector_stocks = sector_stocks[:3]
+                sector_stock_list = ", ".join([s[0] for s in top_sector_stocks])
+                
+                # Add the sector idea
+                ideas.append({
+                    "title": f"{analysis['dominant_sector']} Sector Strength in {market_name}",
+                    "type": "Sector",
+                    "asset": analysis["dominant_sector"],
+                    "market": market_name,
+                    "rationale": f"The {analysis['dominant_sector']} sector is showing strength in the {market_name} market, with multiple stocks among the top performers. Top {analysis['dominant_sector']} stocks include {sector_stock_list}.",
+                    "risk_level": "Medium",
+                    "time_horizon": "Medium-term",
+                    "metrics": {
+                        "stocks_count": len(sector_stocks),
+                        "avg_return": sum(s[1].get("return", 0) for s in sector_stocks) / len(sector_stocks) if sector_stocks else 0,
                     }
                 })
         
         # Analyze Finnhub data for additional insights
         finnhub_analysis = self.analyze_finnhub_data()
         
-        # Process sector data
-        sectors = {
-            "tech": {"name": "Technology", "data": self.data.get("tech_stocks", {})},
-            "finance": {"name": "Financial", "data": self.data.get("finance_stocks", {})},
-            "energy": {"name": "Energy", "data": self.data.get("energy_stocks", {})},
-        }
-        
-        # Calculate sector performance
-        sector_performance = {}
-        for sector_key, sector_info in sectors.items():
-            if sector_info["data"]:
-                performance = self.analyze_stock_performance(sector_info["data"])
-                technical = self.analyze_technical_indicators(sector_info["data"])
-                
-                # Calculate average sector return
-                returns = [p["return"] for p in performance.values() if "return" in p]
-                if returns:
-                    avg_return = sum(returns) / len(returns)
-                    sector_performance[sector_key] = {
-                        "name": sector_info["name"],
-                        "avg_return": avg_return,
-                        "stocks": performance,
-                        "technical": technical
-                    }
-        
-        # Find strongest sector
-        if sector_performance:
-            strongest_sector = max(sector_performance.items(), key=lambda x: x[1]["avg_return"])
-            sector_key, sector_data = strongest_sector
-            
-            # Find best stock in the strongest sector
-            if sector_data["stocks"]:
-                best_stock = max(sector_data["stocks"].items(), key=lambda x: x[1]["return"])
-                stock_ticker, stock_perf = best_stock
-                
-                stock_tech = sector_data["technical"].get(stock_ticker, {})
-                rsi_value = stock_tech.get("rsi", "N/A")
-                rsi_str = f"{rsi_value:.1f}" if isinstance(rsi_value, (int, float)) else "N/A"
-                
-                # Add Finnhub data if available
-                finnhub_info = ""
-                finnhub_metrics = {}
-                if stock_ticker in finnhub_analysis:
-                    fh_data = finnhub_analysis[stock_ticker]
-                    
-                    # Add sentiment info if available
-                    if 'sentiment' in fh_data:
-                        sentiment_score = fh_data['sentiment']['news_score']
-                        sentiment_str = "positive" if sentiment_score > 0.5 else "neutral" if sentiment_score >= 0.3 else "negative"
-                        finnhub_info += f" News sentiment is {sentiment_str} ({sentiment_score:.2f}/1.0)."
-                        finnhub_metrics["sentiment_score"] = sentiment_score
-                    
-                    # Add upcoming earnings if available
-                    if 'upcoming_earnings' in fh_data:
-                        earnings_date = fh_data['upcoming_earnings']['date']
-                        finnhub_info += f" Upcoming earnings on {earnings_date}."
-                        finnhub_metrics["earnings_date"] = earnings_date
-                    
-                    # Add insider info if available
-                    if 'insider' in fh_data and fh_data['insider']['net_transactions'] != 0:
-                        net_tx = fh_data['insider']['net_transactions']
-                        insider_str = "buying" if net_tx > 0 else "selling"
-                        finnhub_info += f" Insiders have been net {insider_str} recently."
-                        finnhub_metrics["insider_trend"] = insider_str
-                    
-                    # Add overall score
-                    if 'finnhub_score' in fh_data:
-                        finnhub_metrics["finnhub_score"] = fh_data['finnhub_score']
-                
-                # Add sector stock idea
-                ideas.append({
-                    "title": f"Strong {sector_data['name']} Stock: {stock_ticker}",
-                    "type": "Stock",
-                    "asset": stock_ticker,
-                    "sector": sector_data['name'],
-                    "rationale": f"{stock_ticker} has shown strong performance in the {sector_data['name']} sector with a {stock_perf['return']:.2f}% return. Technical indicators are supportive with RSI at {rsi_str}.{finnhub_info}",
-                    "risk_level": "Medium-High",
-                    "time_horizon": "Medium-term",
-                    "metrics": {
-                        "return": stock_perf['return'],
-                        "volatility": stock_perf['volatility'],
-                        "rsi": rsi_value if isinstance(rsi_value, (int, float)) else None,
-                        **finnhub_metrics
-                    }
-                })
-        
-        # Generate Finnhub-specific ideas
+        # Generate Finnhub-specific ideas (keeping this part from the original)
         if finnhub_analysis:
-            # Find stock with highest Finnhub score (if not already featured)
+            # Find stock with highest Finnhub score
             high_score_stocks = {ticker: data for ticker, data in finnhub_analysis.items() 
                               if 'finnhub_score' in data and data['finnhub_score'] > 5}
             
@@ -636,55 +749,6 @@ class DataAnalyzer:
                         "sell_volume": insider_data['insider']['sell_volume'],
                     }
                 })
-            
-            # Find stocks with upcoming earnings
-            earnings_stocks = {ticker: data for ticker, data in finnhub_analysis.items() 
-                            if 'upcoming_earnings' in data and data['upcoming_earnings']['date']}
-            
-            if earnings_stocks and not any(idea["title"].startswith("Earnings Play") for idea in ideas):
-                # Sort by closest earnings date
-                sorted_earnings = sorted(
-                    earnings_stocks.items(),
-                    key=lambda x: datetime.datetime.strptime(x[1]['upcoming_earnings']['date'], '%Y-%m-%d')
-                )
-                
-                if sorted_earnings:
-                    ticker, earnings_data = sorted_earnings[0]
-                    earnings_date = earnings_data['upcoming_earnings']['date']
-                    
-                    # Check if date is within next 10 days
-                    earnings_datetime = datetime.datetime.strptime(earnings_date, '%Y-%m-%d')
-                    today = datetime.datetime.now()
-                    days_until = (earnings_datetime - today).days
-                    
-                    if 0 <= days_until <= 10:
-                        # Add earnings play idea
-                        estimate = earnings_data['upcoming_earnings'].get('estimate', 'N/A')
-                        estimate_str = f"{estimate}" if estimate and estimate != 'N/A' else "N/A"
-                        
-                        # Check past earnings performance if available
-                        surprise_info = ""
-                        if 'latest_earnings' in earnings_data:
-                            surprise_pct = earnings_data['latest_earnings'].get('surprise_pct', 0)
-                            if surprise_pct > 0:
-                                surprise_info = f" In the previous quarter, {ticker} beat expectations by {surprise_pct:.2f}%."
-                            elif surprise_pct < 0:
-                                surprise_info = f" In the previous quarter, {ticker} missed expectations by {abs(surprise_pct):.2f}%."
-                        
-                        ideas.append({
-                            "title": f"Earnings Play: {ticker}",
-                            "type": "Event-Driven",
-                            "asset": ticker,
-                            "rationale": f"{ticker} is reporting earnings on {earnings_date} ({days_until} days from now). EPS estimate is {estimate_str}.{surprise_info} Consider a short-term position based on your earnings expectations.",
-                            "risk_level": "High",
-                            "time_horizon": "Short-term",
-                            "metrics": {
-                                "earnings_date": earnings_date,
-                                "days_until": days_until,
-                                "eps_estimate": estimate if estimate and estimate != 'N/A' else None,
-                                "previous_surprise": earnings_data.get('latest_earnings', {}).get('surprise_pct') if 'latest_earnings' in earnings_data else None,
-                            }
-                        })
         
         # Process forex data
         if "forex" in self.data:
@@ -743,100 +807,6 @@ class DataAnalyzer:
                         "time_horizon": "Medium-term",
                         "metrics": {
                             "yield_change": yield_change,
-                        }
-                    })
-        
-        # Process crypto data
-        if "crypto" in self.data:
-            crypto_perf = {}
-            for coin, data in self.data["crypto"].items():
-                if "history" in data and "prices" in data["history"]:
-                    try:
-                        prices = data["history"]["prices"]
-                        if len(prices) > 7:  # At least a week of data
-                            start_price = prices[-7][1]  # [timestamp, price]
-                            end_price = prices[-1][1]
-                            return_pct = (end_price - start_price) / start_price * 100
-                            
-                            # Calculate volatility
-                            price_series = [p[1] for p in prices[-7:]]
-                            returns = [price_series[i] / price_series[i-1] - 1 for i in range(1, len(price_series))]
-                            volatility = np.std(returns) * 100
-                            
-                            crypto_perf[coin] = {
-                                "return": return_pct,
-                                "volatility": volatility,
-                                "current_price": end_price,
-                            }
-                    except Exception as e:
-                        logger.error(f"Error processing crypto data for {coin}: {e}")
-            
-            if crypto_perf:
-                # Find crypto with best risk-adjusted return
-                risk_adjusted = {coin: data["return"] / data["volatility"] if data["volatility"] > 0 else 0 
-                                for coin, data in crypto_perf.items()}
-                best_crypto = max(risk_adjusted.items(), key=lambda x: x[1])
-                coin_name, _ = best_crypto
-                coin_perf = crypto_perf[coin_name]
-                
-                coin_display_names = {
-                    "bitcoin": "Bitcoin (BTC)",
-                    "ethereum": "Ethereum (ETH)",
-                    "xrp": "XRP",
-                    "cardano": "Cardano (ADA)",
-                    "solana": "Solana (SOL)",
-                }
-                coin_display = coin_display_names.get(coin_name, coin_name.capitalize())
-                
-                # Add crypto idea
-                if coin_perf["return"] > 5:  # Only if return is significant
-                    ideas.append({
-                        "title": f"Cryptocurrency Focus: {coin_display}",
-                        "type": "Cryptocurrency",
-                        "asset": coin_display,
-                        "rationale": f"{coin_display} has shown strong performance with a {coin_perf['return']:.2f}% return and favorable risk-adjusted metrics.",
-                        "risk_level": "Very High",
-                        "time_horizon": "Short-term",
-                        "metrics": {
-                            "return": coin_perf['return'],
-                            "volatility": coin_perf['volatility'],
-                            "price": coin_perf['current_price'],
-                        }
-                    })
-        
-        # Process news sentiment
-        if "news" in self.data:
-            sentiment = self.analyze_news_sentiment(self.data["news"])
-            
-            if sentiment:
-                # Find topic with most positive sentiment
-                positive_topic = max(sentiment.items(), key=lambda x: x[1]["avg_sentiment"])
-                topic, sentiment_data = positive_topic
-                
-                if sentiment_data["avg_sentiment"] > 0.2:  # Significantly positive
-                    # Map topic to investment theme
-                    topic_themes = {
-                        "stock market": "broad market equities",
-                        "interest rates": "rate-sensitive sectors",
-                        "inflation": "inflation hedges like commodities or TIPS",
-                        "recession": "defensive stocks and quality companies",
-                        "economic growth": "cyclical sectors",
-                        "federal reserve": "financial sector and rate-sensitive instruments",
-                        "central bank": "bonds and financial stocks",
-                        "earnings season": "companies with strong earnings potential",
-                    }
-                    theme = topic_themes.get(topic, topic)
-                    
-                    ideas.append({
-                        "title": f"Sentiment-Based Opportunity: {topic.title()}",
-                        "type": "Thematic",
-                        "asset": topic.title(),
-                        "rationale": f"News sentiment around {topic} is highly positive ({sentiment_data['avg_sentiment']:.2f}), which may create opportunities in {theme}.",
-                        "risk_level": "Medium",
-                        "time_horizon": "Medium-term",
-                        "metrics": {
-                            "sentiment": sentiment_data['avg_sentiment'],
-                            "article_count": sentiment_data['article_count'],
                         }
                     })
         

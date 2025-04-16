@@ -73,9 +73,30 @@
   }
   
   .ideas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  /* Market section styles */
+  .market-header {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .market-header h3 {
+    color: #0066cc;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  
+  .market-ideas {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 25px;
+    margin-bottom: 30px;
   }
   
   .idea-card {
