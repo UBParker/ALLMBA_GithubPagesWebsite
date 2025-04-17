@@ -246,10 +246,19 @@ function updateDataSourceDisclaimer(data) {
     });
   }
   
+  // Use data.markets_analyzed and data.data_types_used if available
+  if (data.markets_analyzed) {
+    data.markets_analyzed.forEach(market => markets.add(market));
+  }
+  
+  if (data.data_types_used) {
+    data.data_types_used.forEach(type => dataTypes.add(type));
+  }
+  
   // Extract data sources from meta information if available
   const dataSources = data.data_sources || {
     "Stock Data": "Alpha Vantage, Twelve Data, and Finnhub APIs",
-    "Market Indices": data.indices_used ? data.indices_used.join(", ") : "S&P 500, NASDAQ, FTSE 100",
+    "Market Indices": data.markets_analyzed ? data.markets_analyzed.join(", ") : Array.from(markets).join(", ") || "S&P 500, NASDAQ, FTSE 100",
     "Economic Data": "FRED (Federal Reserve Economic Data)",
     "News": "News API",
     "Insider Trading": "Finnhub API"
@@ -277,6 +286,24 @@ function updateDataSourceDisclaimer(data) {
   `;
   
   disclaimerContent.innerHTML = html;
+  
+  // Ensure the disclaimer toggle is initialized
+  const showDisclaimerBtn = document.getElementById('show-disclaimer');
+  if (showDisclaimerBtn) {
+    if (!showDisclaimerBtn.hasAttribute('data-initialized')) {
+      showDisclaimerBtn.setAttribute('data-initialized', 'true');
+      showDisclaimerBtn.addEventListener('click', function() {
+        const content = document.getElementById('disclaimer-content');
+        if (content.style.display === 'none') {
+          content.style.display = 'block';
+          this.textContent = 'Hide Data Sources';
+        } else {
+          content.style.display = 'none';
+          this.textContent = 'Show Data Sources';
+        }
+      });
+    }
+  }
 }
 
 /**
@@ -376,6 +403,10 @@ function displayIdeas(ideas) {
         
         if (idea.metrics.price !== undefined) {
           metricsHtml += `<div><span>Price:</span> $${idea.metrics.price.toFixed(2)}</div>`;
+        }
+        
+        if (idea.metrics.peRatio !== undefined) {
+          metricsHtml += `<div><span>P/E Ratio:</span> ${idea.metrics.peRatio.toFixed(2)}</div>`;
         }
         
         // Additional alternative data metrics

@@ -15,9 +15,25 @@
       }
     },
     {
+      "title": "S&P 500 Tech Sector Momentum",
+      "type": "Sector",
+      "asset": "Technology (S&P 500)",
+      "market": "S&P 500",
+      "sector": "Technology",
+      "rationale": "The technology sector within the S&P 500 is showing strong momentum with leading stocks like AAPL and MSFT driving gains. Technical indicators suggest continued upward movement.",
+      "risk_level": "Medium",
+      "time_horizon": "Medium-term",
+      "metrics": {
+        "return": 5.32,
+        "volatility": 2.15,
+        "rsi": 63.4
+      }
+    },
+    {
       "title": "Strong Financial Stock: GS",
       "type": "Stock",
       "asset": "GS",
+      "market": "S&P 500",
       "sector": "Financial",
       "rationale": "GS has shown strong performance in the Financial sector with a 7.94% return. Technical indicators are supportive with RSI at 37.8.",
       "risk_level": "Medium-High",
@@ -29,15 +45,32 @@
       }
     },
     {
+      "title": "NASDAQ Growth Stock: NVDA",
+      "type": "Stock",
+      "asset": "NVDA",
+      "market": "NASDAQ",
+      "sector": "Technology",
+      "rationale": "NVDA continues to outperform the broader NASDAQ index with strong growth metrics. AI and data center demand remains robust, supporting further upside.",
+      "risk_level": "High",
+      "time_horizon": "Long-term",
+      "metrics": {
+        "return": 9.85,
+        "volatility": 8.23,
+        "rsi": 72.6
+      }
+    },
+    {
       "title": "Alternative Data Pick: MSFT",
       "type": "Stock",
       "asset": "MSFT",
+      "market": "NASDAQ",
+      "sector": "Technology",
       "rationale": "MSFT shows positive signals based on alternative data analysis. Insider buying detected with 19 recent purchases. Recent earnings beat expectations by 1.79%.",
       "risk_level": "Medium-High",
       "time_horizon": "Medium-term",
       "metrics": {
         "finnhub_score": 5.8934,
-        "sentiment": null,
+        "sentiment": 0.67,
         "insider_buys": 19,
         "earnings_surprise": 1.7868
       }
@@ -46,6 +79,8 @@
       "title": "Insider Activity: MSFT",
       "type": "Stock",
       "asset": "MSFT",
+      "market": "NASDAQ",
+      "sector": "Technology",
       "rationale": "Strong insider buying detected in MSFT with 19 purchases versus 6 sales over the past 3 months. Insider buying often signals management's confidence in future prospects.",
       "risk_level": "Medium",
       "time_horizon": "Medium-term to Long-term",
@@ -55,5 +90,17 @@
         "sell_volume": 14880
       }
     }
-  ]
+  ],
+  "data_sources": {
+    "Stock Data": "Alpha Vantage, Twelve Data, and Finnhub APIs",
+    "Market Indices": "S&P 500, NASDAQ, Hong Kong (Hang Seng)",
+    "Sectors Analyzed": "Technology, Financial, Energy",
+    "Economic Data": "FRED (Federal Reserve Economic Data)",
+    "Technical Analysis": "RSI, MACD, Moving Averages",
+    "News Sentiment": "News API",
+    "Insider Trading": "Finnhub API"
+  },
+  "markets_analyzed": ["S&P 500", "NASDAQ", "Hong Kong (Hang Seng)"],
+  "data_types_used": ["Technical Indicators", "Alternative Data", "Insider Trading", "News Sentiment"],
+  "generated_at": "2025-04-16T08:23:45.123456"
 }
